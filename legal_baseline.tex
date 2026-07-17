@@ -1,0 +1,170 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\geometry{top=25mm, bottom=25mm, left=20mm, right=20mm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{fancyhdr}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{lastpage}
+\usepackage{microtype}
+
+% --- Layout & Page Budget Config ---
+\setlength{\parindent}{0in}
+\setlength{\parskip}{12pt}
+
+% --- Header and Footer Formatting ---
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0.5pt}
+\lfoot{\footnotesize INTERNAL COMPLIANCE REPORT: LEGAL BASELINE FOR DATA ANONYMIZATION}
+\rfoot{\footnotesize Page \thepage\ of \pageref{LastPage}}
+
+% --- Typography & Heading Styles ---
+\titleformat{\section}{\normalfont\normalsize\bfseries\uppercase}{\thesection.}{0.5em}{}[{\titlerule[0.75pt]}]
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\Alph{subsection}.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\bfseries}{}{0em}{}
+
+\titlespacing*{\section}{0pt}{22pt}{10pt}
+\titlespacing*{\subsection}{0pt}{15pt}{6pt}
+\titlespacing*{\subsubsection}{0pt}{15pt}{6pt}
+
+% --- Custom Legal Quote Environment ---
+\newenvironment{legalquote}{
+    \begin{list}{}{
+        \leftmargin=0.5in
+        \rightmargin=0in
+        \topsep=6pt
+        \partopsep=0pt
+        \parsep=\parskip
+    }
+    \item[]\itshape
+}{
+    \end{list}
+}
+
+\begin{document}
+
+% --- Document Header Block ---
+\begin{center}
+    {\large\bfseries \MakeUppercase{Legal Baseline for Data Anonymization}} \\[4pt]
+    {\itshape Establishing Fundamental Principles on Transmitting Data to Foreign Services (LLMs) Under Algerian Law} \\[12pt]
+    \hrule height 2pt
+    \vspace{6pt}
+    {\footnotesize \textbf{Reference Document:} Loi n\textsuperscript{o} 18-07 (DZ), amended by Loi n\textsuperscript{o} 25-11 (DZ) \textbar\ EU GDPR (Extraterritorial Scope)}
+    \vspace{10pt}
+\end{center}
+
+% --- Section 1: Pure Requested Content & Paragraph Spacing ---
+\section{Purpose and Legal Scope}
+This framework defines the legal and technical boundaries for data anonymization before it is transmitted to external Large Language Models (LLMs) and foreign cloud infrastructure.
+
+Under Algerian Law 18-07, exposing organizational or individual data to third-party AI platforms constitutes data processing (traitement de données). Because commercial LLM providers host their infrastructure globally, this transmission is legally classified as a cross-border data transfer. This document provides the exact baseline required to ensure data is structurally anonymized before leaving our environment, mitigating the risk of unauthorized data exports and ensuring strict compliance with the National Authority for the Protection of Personal Data (ANPDP).
+
+% --- Section 2 ---
+\section{Statutory Foundations}
+This section outlines the key legal definitions and their corresponding articles from Algerian law, quoting the original official statements. These definitions serve as the direct baseline for how we classify data in this framework.
+
+\subsection{Statutory Definition of Personal Data}
+Any dataset, log string, or text sequence input into an LLM prompt that identifies a natural person, whether directly or indirectly, triggers full legal accountability under the primary legislation because it is considered personal data:
+
+\begin{legalquote}
+    « Données à caractère personnel » : toute information, quel qu'en soit son support, concernant une personne identifiée ou identifiable, ci-dessous dénommée « personne concernée », d'une manière directe ou indirecte, notamment par référence à un numéro d'identification ou à un ou plusieurs éléments spécifiques de son identité physique, physiologique, génétique, biométrique, psychique, économique, culturelle ou sociale.
+\end{legalquote}
+\hfill {\footnotesize\bfseries ARTICLE 3 — LOI N\textsuperscript{o} 18-07 DU 10 JUIN 2018}
+
+\subsection{Legal Codification of Pseudonymisation}
+Algerian law formally defines pseudonymisation as a recognized method to protect data by replacing direct identifiers. This definition establishes the legal baseline for using secure, local placeholders before data is shared with external platforms:
+\begin{legalquote}
+    « Pseudonymisation : traitement des données à caractère personnel de telle manière qu'elles ne puissent désormais être attribuées à une personne concernée sans recourir à des informations supplémentaires ; pourvu que ces informations supplémentaires soient conservées séparément et soumises à des mesures techniques et organisationnelles... »
+\end{legalquote}
+\hfill {\footnotesize\bfseries ARTICLE 3 (MODIFIÉ PAR LA LOI N\textsuperscript{o} 25-11 DU 24 JUILLET 2025)}
+
+\subsection{Absolute Statutory Prohibition of Sensitive Data Categories}
+Specific categories of data are protected by an absolute ban on processing. These parameters are non-negotiable and cannot be waived via enterprise cloud agreements:
+
+\begin{legalquote}
+    « Données sensibles : données à caractère personnel qui révèlent l'origine raciale ou ethnique, les opinions politiques, les convictions religieuses ou philosophiques ou l'appartenance syndicale de la personne concernée ou qui sont relatives à sa santé y compris ses données génétiques ; »
+\end{legalquote}
+\hfill {\footnotesize\bfseries ARTICLE 3 — LOI N\textsuperscript{o} 18-07 DU 10 JUIN 2018}
+
+\begin{legalquote}
+    Art. 18. — Est interdit le traitement des données sensibles.
+\end{legalquote}
+\hfill {\footnotesize\bfseries ARTICLE 18 — LOI N\textsuperscript{o} 18-07 DU 10 JUIN 2018}
+
+% --- Section 3 ---
+\section{Data Categorization Framework and Risk Stratification}
+based on the legal definition outlined above under Artical 3 (Loi 18-07) and Artical 3 (Loi 25-11) internal eterprise assets are grouped into three distinct categories determining their suitablity for external LLM ingestion:
+
+\subsubsection{Category I: Direct Identifiers}
+Data fields or records that isolate and explicitly specify an individual person without requiring additional lookups.
+
+\hspace*{0.25in}\textbf{Examples:} Civil names, national biometric IDs, and related unique indices.
+
+\subsubsection{Category II: Quasi-Identifiers}
+Data records that do not contain direct names but contain indirect clues. On their own they are clean, but if too many of these clues are combined, they could allow someone to guess an individual's identity.
+
+\hspace*{0.25in}\textbf{Examples} : Combinations of specific branch locations, operational departments, and specialized job ranks.
+
+\subsubsection{Category III: Sensitive Data Categories}
+Data records containing highly sensitive personal details that are strictly protected by law under Article 18 of Loi 18-07.
+
+\hspace*{0.25in}\textbf{Examples:} Medical records and health diagnoses, religious or philosophical beliefs, trade union memberships, political opinions, and genetic data.
+\newpage
+
+% --- Section 4 ---
+\section{LLM Submission Decision Matrix}
+This matrix dictates the mandatory technical actions required before any enterprise data asset can be transmitted to an external LLM platform.
+
+\vspace{6sp}
+\begin{table}[h!]
+\small
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{Data Classification} & \textbf{Submission Status} & \textbf{Compliance Action and Enforcement Mandate} \\ \hline
+\textbf{Category I: Direct Identifiers} & \hfil\textbf{PROHIBITED}\hfil & Complete structural sanitization required. All primary identifiers must be purged, hashed, or generalized into structural placeholders prior to API transmission. \\ \hline
+\textbf{Category II: Quasi-Identifiers} & \hfil\textbf{RESTRICTED}\hfil & Permissible strictly if mathematical $k$-anonymity parameters are satisfied. The structural attributes must guarantee the data subject blends into an equivalence cohort of a minimum of 5--10 individuals within the prompt domain. \\ \hline
+\textbf{Category III: Sensitive Data} & \hfil\textbf{PROHIBITED}\hfil & Absolute computing embargo. Under Article 18, enterprise security controls must block cloud-bound routing of health, biological, or ideological data sequences. \\ \hline
+\textbf{Non-Personal / Anonymized} & \hfil\textbf{PERMITTED}\hfil & Open for algorithmic ingestion, translation, summarization, and software synthesis. Restrained only by general commercial confidentiality rules. \\ \hline
+\end{tabularx}
+\end{table}
+
+% --- Section 5 ---
+\section{The Cross-Border Transfer Threshold}
+Because public and commercial LLM configurations leverage globally scaled infrastructure, standard prompt transactions trigger an international data export. Algerian statutory controls place strict barriers on geographic data routing:
+
+\begin{legalquote}
+    Art. 44. — Le responsable d'un traitement ne peut transférer, les données à caractère personnel vers un Etat étranger, que sur autorisation de l'autorité nationale, conformément aux dispositions de la présente loi...
+\end{legalquote}
+\hfill {\footnotesize\bfseries ARTICLE 44 — LOI N\textsuperscript{o} 18-07 DU 10 JUIN 2018}
+
+Consequently, exporting Category I profiles or unverified Category II records to foreign cloud environments without a formally executed, verified authorization from the ANPDP constitutes a severe statutory violation subject to the penal enforcement provisions of the law.
+
+% --- Section 6 ---
+\section{General Technical Security Obligations}
+All operational software pipelines and data architectures are legally mandated to deploy technical measures preventing unintended data extraction or leakage into model repositories. This maps to the primary security text:
+
+\begin{legalquote}
+    Art. 38. — Le responsable du traitement doit mettre en œuvre les mesures techniques et organisationnelles appropriées pour protéger les données à caractère personnel contre la destruction accidentelle ou illicite, la perte accidentelle, l'altération, la diffusion ou l'accès non autorisé, notamment lorsque le traitement comporte des transmissions de données dans un réseau, ainsi que contre toute autre forme de traitement illicite.
+\end{legalquote}
+\hfill {\footnotesize\bfseries ARTICLE 38 — LOI N\textsuperscript{o} 18-07 DU 10 JUIN 2018}
+
+Mandatory Engineering Enforcements:
+\begin{itemize}[leftmargin=0.5in, topsep=0pt, itemsep=4pt]
+    \item \textbf{1. Training Suppression Configs:} Enterprise and API deployment accounts must enforce explicit opt-out configurations ensuring prompt payloads are never retained for base model weight modifications or algorithmic optimization by third-party vendor systems.
+    \item \textbf{2. Edge-Based Sanitization Ingestion:} Internal communication pipelines must deploy mandatory, local automated sanitization rules (regex filters, local Named Entity Recognition models) to block and filter structural patterns like email formats or national index tokens before data crosses network boundaries.
+    \item \textbf{3. Unified Processing Register:} To align with accountability rules, all workflows transmitting algorithmic payloads to automated models must maintain an updated, unalterable log in the Data Protection Officer's (DPO) corporate processing registry.
+\end{itemize}
+
+\vspace{20pt}
+\hrule height 0.5pt
+\vspace{4pt}
+{\footnotesize \itshape * Legal Disclaimer: This document is an approved corporate regulatory directive. Unauthorized deviation or failure to enforce the technical controls outlined herein constitutes a serious breach of corporate governance and exposes the individual to disciplinary liability and the statutory criminal penalties under Chapter VII of Algerian Law No. 18-07.}
+
+\end{document}
