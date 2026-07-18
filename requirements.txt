@@ -1,3 +1,7 @@
 presidio-analyzer
 presidio-anonymizer
 spacy
+pymupdf
+python-docx
+pytesseract
+Pillow
