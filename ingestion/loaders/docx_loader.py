@@ -1,17 +1,12 @@
-"""
-docx_loader.py — Word document loader via python-docx
-"""
-
 from pathlib import Path
 
 from ingestion.base import AbstractDocumentLoader
+from ingestion.document import StructuredDocument, TextBlock
 from ingestion.exceptions import IngestionError
 
 
 class DocxLoader(AbstractDocumentLoader):
-    """Extract text from a .docx file."""
-
-    def load(self, path: Path) -> str:
+    def load(self, path: Path) -> StructuredDocument:
         try:
             from docx import Document
         except ImportError:
@@ -22,5 +17,24 @@ class DocxLoader(AbstractDocumentLoader):
         except Exception as exc:
             raise IngestionError(f"Failed to open docx {path}: {exc}")
 
-        paragraphs = [p.text for p in doc.paragraphs]
-        return "\n".join(paragraphs)
+        blocks = []
+        paragraphs = []
+
+        for i, p in enumerate(doc.paragraphs):
+            text = p.text
+            if not text:
+                continue
+            paragraphs.append(text)
+            blocks.append(
+                TextBlock(
+                    text=text,
+                    page=0,
+                    block_type="text",
+                )
+            )
+
+        return StructuredDocument(
+            text="\n".join(paragraphs),
+            blocks=blocks,
+            metadata={"paragraphs": len(paragraphs)},
+        )

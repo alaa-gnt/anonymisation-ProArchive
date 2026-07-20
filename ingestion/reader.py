@@ -1,48 +1,17 @@
-"""
-reader.py — Document Ingestion Facade
-======================================
 
-Detects file type by extension and dispatches to the correct loader.
+from pathlib import Path # to read the path
 
-Usage:
-    from ingestion.reader import read_file
-
-    text, meta = read_file("contract.pdf")
-    print(meta["source"], meta["extension"])
-"""
-
-from pathlib import Path
-
-from ingestion.exceptions import UnsupportedFormatError
-from ingestion.loaders import LOADERS
+from ingestion.exceptions import UnsupportedFormatError # exception for unsupported file formats
+from ingestion.loaders import LOADERS # import the loaders for different file formats
 
 
 def read_file(path):
-    """
-    Detect file type and extract text.
-
-    Parameters
-    ----------
-    path : str or Path
-        Path to the document.
-
-    Returns
-    -------
-    (text, metadata)
-        text : str — full extracted text.
-        metadata : dict — source path, extension, filename, char_count.
-
-    Raises
-    ------
-    FileNotFoundError
-        If *path* does not exist.
-    UnsupportedFormatError
-        If the extension is not registered.
-    """
-    path = Path(path)
-    ext = path.suffix.lower()
+    path = Path(path) #read the path as a Path object
+    ext = path.suffix.lower() # file extension in lower case 
 
     loader = LOADERS.get(ext)
+
+    #cheking if the file actually exists or no 
     if loader is None:
         raise UnsupportedFormatError(
             f"Unsupported file extension '{ext}'. "
@@ -52,13 +21,14 @@ def read_file(path):
     if not path.exists():
         raise FileNotFoundError(f"File not found: {path}")
 
-    text = loader.load(path)
+    doc = loader.load(path)
 
     metadata = {
         "source": str(path.resolve()),
         "extension": ext,
         "filename": path.name,
-        "char_count": len(text),
+        "char_count": len(doc.text),
+        **doc.metadata,
     }
 
-    return text, metadata
+    return doc.text, metadata

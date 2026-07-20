@@ -1,6 +1,3 @@
-"""
-exceptions.py — Ingestion error types
-"""
 
 
 class IngestionError(Exception):

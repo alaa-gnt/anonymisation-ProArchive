@@ -1,6 +1,4 @@
-"""
-loaders/__init__.py — Loader registry
-"""
+# loading different file formats using their respective loaders
 
 from ingestion.loaders.txt_loader import TxtLoader
 from ingestion.loaders.pdf_loader import PdfLoader
