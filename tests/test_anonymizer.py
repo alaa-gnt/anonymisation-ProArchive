@@ -38,6 +38,18 @@ class TestAnonymizer:
         assert "******" in output.text
         assert "0551234567" not in output.text
 
+    def test_nin_redacted(self, analyzer, anonymizer):
+        text = "ID: 123456 123456 123456"
+        results = run_analyzer(analyzer, text)
+        output = run_anonymizer(anonymizer, text, results)
+        assert "<ID_REDACTED>" in output.text
+
+    def test_rib_masked(self, analyzer, anonymizer):
+        text = "RIB: 00712345678910001234"
+        results = run_analyzer(analyzer, text)
+        output = run_anonymizer(anonymizer, text, results)
+        assert "****" in output.text
+
     def test_no_entities_unchanged(self, analyzer, anonymizer):
         text = "Just a normal day."
         results = run_analyzer(analyzer, text)

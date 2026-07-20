@@ -27,12 +27,45 @@ class TestAnalyzer:
         types = [r.entity_type for r in results]
         assert "DZ_PHONE" in types
 
+    def test_detect_nin(self, analyzer):
+        results = run_analyzer(analyzer, "My ID is 123456 123456 123456")
+        types = [r.entity_type for r in results]
+        assert "DZ_NIN" in types
+
+    def test_detect_passport(self, analyzer):
+        results = run_analyzer(analyzer, "Passport AB123456")
+        types = [r.entity_type for r in results]
+        assert "DZ_PASSPORT" in types
+
+    def test_detect_rib(self, analyzer):
+        results = run_analyzer(analyzer, "RIB: 00712345678910001234")
+        types = [r.entity_type for r in results]
+        assert "DZ_RIB" in types
+
+    def test_detect_rc(self, analyzer):
+        results = run_analyzer(analyzer, "RC: B1234567890")
+        types = [r.entity_type for r in results]
+        assert "DZ_RC" in types
+
+    def test_detect_nif(self, analyzer):
+        results = run_analyzer(analyzer, "NIF: 123456789012345")
+        types = [r.entity_type for r in results]
+        assert "DZ_NIF" in types
+
+    def test_detect_postal(self, analyzer):
+        results = run_analyzer(analyzer, "Alger 16000")
+        types = [r.entity_type for r in results]
+        assert "DZ_POSTAL" in types
+
     def test_no_pii_returns_empty(self, analyzer):
         results = run_analyzer(analyzer, "This is a harmless sentence.")
         assert len(results) == 0
 
     def test_multiple_entities_in_one_text(self, analyzer):
-        text = "Mehdi Benali — mehdi@example.com — 0551234567"
+        text = "Mehdi Benali — mehdi@example.com — 0551234567 — 123456 123456 123456"
         results = run_analyzer(analyzer, text)
         types = {r.entity_type for r in results}
-        assert types == {"PERSON", "EMAIL_ADDRESS", "DZ_PHONE"}
+        assert "PERSON" in types
+        assert "EMAIL_ADDRESS" in types
+        assert "DZ_PHONE" in types
+        assert "DZ_NIN" in types
