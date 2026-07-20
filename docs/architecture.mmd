@@ -10,15 +10,63 @@ flowchart TB
     %% ── 1. Ingestion Layer ──
     subgraph INGESTION ["1. Document Ingestion"]
         direction TB
-        READ[read_file<br/>detect extension]
-        TXT_LOADER["txt_loader (.txt, .md, .csv)"]
-        PDF_LOADER["pdf_loader (.pdf)"]
-        DOCX_LOADER["docx_loader (.docx)"]
-        IMG_LOADER["image_loader (.png, .jpg)"]
-        READ --> TXT_LOADER
-        READ --> PDF_LOADER
-        READ --> DOCX_LOADER
-        READ --> IMG_LOADER
+        READ["read_file(path)
+        ───────────────
+        ① Path → extension
+        ② LOADERS[ext] lookup
+        ③ loader.load(path)
+        ④ return (text, metadata)"]
+
+        subgraph MODELS ["Data Models"]
+            TB_MODEL["TextBlock:  text, page, bbox, block_type"]
+            SD_MODEL["StructuredDocument:  text, blocks[], metadata{}"]
+        end
+
+        REG["LOADERS dict
+        ────────────
+        .txt → TxtLoader
+        .md  → TxtLoader
+        .csv → TxtLoader
+        .pdf → PdfLoader
+        .docx→ DocxLoader
+        .png → ImageLoader
+        .jpg → ImageLoader
+        .tiff→ ImageLoader"]
+
+        TXT["TxtLoader
+        ─────────
+        utf-8→latin-1→cp1256
+        1 block per line
+        no bbox"]
+
+        PDF["PdfLoader
+        ─────────
+        PyMuPDF (fitz)
+        1 block per page block
+        with bbox + page"]
+
+        DOCX["DocxLoader
+        ──────────
+        python-docx
+        1 block per paragraph
+        no bbox, page=0"]
+
+        IMG["ImageLoader
+        ──────────
+        Tesseract OCR
+        lang=ara+fra+eng
+        words→lines with bbox
+        ✅ Position preserved"]
+
+        READ --> REG
+        REG --> TXT
+        REG --> PDF
+        REG --> DOCX
+        REG --> IMG
+        TXT --- MODELS
+        PDF --- MODELS
+        DOCX --- MODELS
+        IMG --- MODELS
     end
 
     INGESTION --> LANG_ROUTER
@@ -29,10 +77,13 @@ flowchart TB
         LANG_DETECT -->|en| EN_PIPELINE
         LANG_DETECT -->|fr| FR_PIPELINE
         LANG_DETECT -->|ar| AR_PIPELINE
+        LANG_DETECT -->|default| MULTI["Run both FR + AR<br/>and merge results"]
 
         EN_PIPELINE["EN Pipeline<br/>en_core_web_lg (spaCy)"]
         FR_PIPELINE["FR Pipeline<br/>fr_core_news_md (spaCy)"]
-        AR_PIPELINE["AR Pipeline<br/>_SafeNlpEngine wrapper  ←  No Arabic spaCy model<br/>returns empty NlpArtifacts<br/>→ regex + deny-lists only"]
+        AR_PIPELINE["AR Pipeline<br/>_SafeNlpEngine wrapper  ←  No Arabic spaCy model<br/>returns empty NlpArtifacts<br/>→ regex + deny-lists + custom subclasses"]
+        MULTI --> FR_PIPELINE
+        MULTI --> AR_PIPELINE
     end
 
     EN_PIPELINE --> ANALYZER
@@ -47,21 +98,16 @@ flowchart TB
             KEPT["✅ Retained default recognizers<br/>EMAIL, CREDIT_CARD (Luhn),<br/>IP, URL, IBAN, PHONE_NUMBER"]
         end
 
-        subgraph LANGUAGE_REGISTRATION ["Registered for en, fr, ar"]
-            CUSTOM["Custom PatternRecognizers (x3 languages)"]
-        end
-
-        subgraph CUSTOM ["Custom (Algerian-specific) — all score 0.95"]
-            direction TB
-            DZ_PHONE["📞 DZ_PHONE<br/>\b(05|06|07)\d{8}\b"]
-            DZ_NIN["🆔 DZ_NIN<br/>\b\d{6}\s?\d{6}\s?\d{6}\b"]
-            DZ_PASSPORT["📘 DZ_PASSPORT<br/>\b[A-Z]{2}\d{6}\b"]
-            DZ_RIB["🏦 DZ_RIB<br/>\b\d{20}\b"]
-            DZ_RC["🏢 DZ_RC<br/>\b[A-Z]{1,2}\d{7,10}\b"]
+        subgraph ALGERIAN ["Custom Recognizer Subclasses (src/recognizers/)"]
+            DZ_PHONE["📞 DZ_PHONE<br/>mobile: \b(05|06|07)\d{8}\b<br/>landline: \b0[234]\d{7,8}\b"]
+            DZ_NIN["🆔 DZ_NIN<br/>\b\d{6}\s?\d{6}\s?\d{6}\b<br/>🔢 Luhn checksum filter"]
+            DZ_PASSPORT["📘 DZ_PASSPORT<br/>\b\d{9}\b<br/>(fixed from old [A-Z]{2}\d{6})"]
+            DZ_RIB["🏦 DZ_RIB<br/>\b\d{20}\b<br/>🔢 mod-97 checksum filter"]
+            DZ_IBAN["🏦 IBAN_CODE<br/>\bDZ\d{22}\b<br/>🔢 mod-97 checksum filter"]
+            DZ_RC["🏢 DZ_RC<br/>CNRC: YY/WW-SSSSSS[L]<br/>wilaya-validated"]
             DZ_NIF["🧾 DZ_NIF<br/>\b\d{15}\b"]
-            DZ_WILAYA["🗺️ DZ_WILAYA<br/>codes 01–58 (score 0.3)"]
+            DZ_NIS["🧾 DZ_NIS<br/>\b\d{15}\b"]
             DZ_POSTAL["📫 DZ_POSTAL<br/>\b(01–58)\d{3}\b (score 0.85)"]
-            DZ_SSN["🆔 DZ_SSN<br/>\b[12]\d{12,14}\b"]
         end
 
         subgraph DENY_LISTS ["Deny-List Recognizers (EN / FR / AR)"]
@@ -70,33 +116,52 @@ flowchart TB
         end
     end
 
-    ANALYZER -->|analyzer_results| RISK_CLASSIFIER
+    ANALYZER --> MERGE
 
-    %% ── 4. Risk Classifier ──
-    subgraph RISK_CLASSIFIER ["4. Risk Classifier (Legal Layer)"]
-        CAT_I["Cat I: Direct Identifiers<br/>PERSON, EMAIL, PHONE, NIN, PASSPORT,<br/>RIB, RC, NIF, SSN, CREDIT_CARD"]
-        CAT_II["Cat II: Quasi-Identifiers<br/>LOCATION, DATE_TIME, WILAYA, POSTAL,<br/>IP, URL, IBAN"]
-        CAT_III["Cat III: Sensitive Data<br/>HEALTH, RELIGION, POLITICS<br/><b>→ BLOCK (Art. 18)</b>"]
-
-        CAT_I -->|must remove| ANONYMIZER
-        CAT_II -->|k-anonymize| ANONYMIZER
-        CAT_III --> BLOCK["❌ Document Rejected"]
+    %% ── 3.5 Result Merge (multi-language) ──
+    subgraph MERGE ["3.5 Multi-Language Result Merge"]
+        MERGE_FN["_merge_results()"]
+        FILTER["Cross-language NER filter<br/>FR/EN NER on Arabic-script text → dropped"]
+        OVERLAP["Overlapping spans → keep highest score / longest span"]
+        MERGE_FN --> FILTER
+        FILTER --> OVERLAP
     end
 
-    ANONYMIZER -->|operators + text| OUTPUT
+    MERGE --> RISK_CLASSIFIER
+
+    %% ── 4. Risk Classifier ──
+    subgraph RISK_CLASSIFIER ["4. Risk Classifier (Legal Layer) — NOT IMPLEMENTED"]
+        CAT_I["Cat I: Direct Identifiers<br/>PERSON, EMAIL, PHONE, NIN, PASSPORT,<br/>RIB, RC, NIF, NIS, CREDIT_CARD"]
+        CAT_II["Cat II: Quasi-Identifiers<br/>LOCATION, DATE_TIME, POSTAL,<br/>IP, URL, IBAN"]
+        CAT_III["Cat III: Sensitive Data<br/>HEALTH, RELIGION, POLITICS<br/><b>→ BLOCK (Art. 18)</b>"]
+    end
+
+    CAT_I -->|must remove| ANONYMIZER
+    CAT_II -->|k-anonymize| ANONYMIZER
+    CAT_III --> BLOCK["❌ Document Rejected"]
+
+    ANONYMIZER -->|anonymized text| OUTPUT
 
     %% ── 5. Anonymizer ──
     subgraph ANONYMIZER ["5. Anonymization Engine"]
-        PRESIDIO_ANONYM["Presidio AnonymizerEngine"]
+        OPS["_build_operators() → OperatorConfig per entity"]
+        PSEUDO["anonymize_with_pseudonyms()"]
+        APPLY["_apply_operator(value, config)"]
+        PERS_GROUP["PERSON: first-name grouping<br/>unique first word → <PERSON_N>"]
+
+        OPS --> PSEUDO
+        PSEUDO --> APPLY
+        PERS_GROUP --> PSEUDO
+
         REPLACE["replace → &lt;ALGERIAN_CITIZEN&gt;<br/>&lt;ID_REDACTED&gt;, &lt;RC_REDACTED&gt;"]
         HASH["hash → SHA-256<br/>for EMAIL_ADDRESS"]
         MASK["mask → ******4567<br/>for PHONE, RIB, POSTAL"]
         REDACT["redact → remove entirely"]
 
-        PRESIDIO_ANONYM --> REPLACE
-        PRESIDIO_ANONYM --> HASH
-        PRESIDIO_ANONYM --> MASK
-        PRESIDIO_ANONYM --> REDACT
+        APPLY --> REPLACE
+        APPLY --> HASH
+        APPLY --> MASK
+        APPLY --> REDACT
     end
 
     %% ── 6. Post-Processing & Output ──
@@ -116,3 +181,4 @@ flowchart TB
     LEGEND_CLASSIFIER -.->|"⚖️ Legal baseline (Loi 18-07 / 25-11)"| RISK_CLASSIFIER
     LEGEND_ANONYMIZER -.->|"🔐 Strategies per entity"| ANONYMIZER
     LEGEND_AR -.->|"⚠️ Arabic: regex/deny only (no spaCy model)"| LANG_ROUTER
+    LEGEND_MERGE -.->|"🔄 fr + ar results merged"| MERGE

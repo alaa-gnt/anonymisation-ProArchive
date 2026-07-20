@@ -1,0 +1,8 @@
+presidio-analyzer
+presidio-anonymizer
+spacy
+langdetect
+pymupdf
+python-docx
+pytesseract         # also needs: sudo apt install tesseract-ocr
+Pillow
