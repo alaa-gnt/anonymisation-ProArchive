@@ -28,22 +28,22 @@ class TestAnalyzer:
         assert "DZ_PHONE" in types
 
     def test_detect_nin(self, analyzer):
-        results = run_analyzer(analyzer, "My ID is 123456 123456 123456")
+        results = run_analyzer(analyzer, "My ID is 123456 123456 123453")
         types = [r.entity_type for r in results]
         assert "DZ_NIN" in types
 
     def test_detect_passport(self, analyzer):
-        results = run_analyzer(analyzer, "Passport AB123456")
+        results = run_analyzer(analyzer, "Passport 123456789")
         types = [r.entity_type for r in results]
         assert "DZ_PASSPORT" in types
 
     def test_detect_rib(self, analyzer):
-        results = run_analyzer(analyzer, "RIB: 00712345678910001234")
+        results = run_analyzer(analyzer, "RIB: 00712345678910001252")
         types = [r.entity_type for r in results]
         assert "DZ_RIB" in types
 
     def test_detect_rc(self, analyzer):
-        results = run_analyzer(analyzer, "RC: B1234567890")
+        results = run_analyzer(analyzer, "RC: 16/16-0123456")
         types = [r.entity_type for r in results]
         assert "DZ_RC" in types
 
@@ -62,7 +62,7 @@ class TestAnalyzer:
         assert len(results) == 0
 
     def test_multiple_entities_in_one_text(self, analyzer):
-        text = "Mehdi Benali — mehdi@example.com — 0551234567 — 123456 123456 123456"
+        text = "Mehdi Benali — mehdi@example.com — 0551234567 — 123456 123456 123453"
         results = run_analyzer(analyzer, text)
         types = {r.entity_type for r in results}
         assert "PERSON" in types

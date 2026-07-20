@@ -48,13 +48,13 @@ class TestAnonymizer:
         assert "0551234567" not in output.text
 
     def test_nin_redacted(self, analyzer, anonymizer):
-        text = "ID: 123456 123456 123456"
+        text = "ID: 123456 123456 123453"
         results = run_analyzer(analyzer, text)
         output = run_anonymizer(anonymizer, text, results)
         assert "<ID_REDACTED>" in output.text
 
     def test_rib_masked(self, analyzer, anonymizer):
-        text = "RIB: 00712345678910001234"
+        text = "RIB: 00712345678910001252"
         results = run_analyzer(analyzer, text)
         output = run_anonymizer(anonymizer, text, results)
         assert "****" in output.text
