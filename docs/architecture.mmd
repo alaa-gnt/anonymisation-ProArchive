@@ -23,12 +23,16 @@ flowchart TB
 
     INGESTION --> LANG_ROUTER
 
-    %% ── 2. Language Router ──
-    subgraph LANG_ROUTER ["2. Language Detection & Routing"]
-        LANG_DETECT["Language Detector<br/>(langdetect / fastText)"]
+    %% ── 2. Language Detection & NLP Pipelines ──
+    subgraph LANG_ROUTER ["2. Language Detection & NLP Pipelines"]
+        LANG_DETECT["Language Detector<br/>(langdetect)"]
         LANG_DETECT -->|en| EN_PIPELINE
         LANG_DETECT -->|fr| FR_PIPELINE
         LANG_DETECT -->|ar| AR_PIPELINE
+
+        EN_PIPELINE["EN Pipeline<br/>en_core_web_lg (spaCy)"]
+        FR_PIPELINE["FR Pipeline<br/>fr_core_news_md (spaCy)"]
+        AR_PIPELINE["AR Pipeline<br/>_SafeNlpEngine wrapper  ←  No Arabic spaCy model<br/>returns empty NlpArtifacts<br/>→ regex + deny-lists only"]
     end
 
     EN_PIPELINE --> ANALYZER
@@ -37,36 +41,41 @@ flowchart TB
 
     %% ── 3. Analyzer (Detection) ──
     subgraph ANALYZER ["3. PII Detection Engine"]
-        PRESIDIO_ANALYZER["Presidio AnalyzerEngine"]
 
-        subgraph BUILTIN ["Auto-detected (no code needed)"]
-            direction TB
-            NER_ENTITIES["🧠 spaCy NER<br/>━━━━━━━━━━━━━━━━━━━━━━━━<br/>PERSON    → full names of individuals<br/>LOCATION  → cities, countries, addresses<br/>DATE_TIME → dates, timestamps, years, ages<br/>NRP       → nationalities, religious groups"]
-            REGEX_ENTITIES["🔍 Built-in Regex<br/>━━━━━━━━━━━━━━━━━━━━━━━━<br/>EMAIL_ADDRESS → email@domain.com<br/>PHONE_NUMBER  → general phone (+213...)<br/>CREDIT_CARD   → Luhn algorithm (universal)<br/>IP_ADDRESS    → IPv4 / IPv6<br/>URL           → web addresses<br/>IBAN_CODE     → international bank format"]
+        subgraph PRESIDIO_CORE ["Presidio AnalyzerEngine (EN / FR / AR)"]
+            REMOVED["❌ Removed US/UK recognizers<br/>(SSN, ITIN, passport, NHS, etc.)<br/>❌ Crypto, MedicalLicense, MAC"]
+            KEPT["✅ Retained default recognizers<br/>EMAIL, CREDIT_CARD (Luhn),<br/>IP, URL, IBAN, PHONE_NUMBER"]
         end
 
-        subgraph CUSTOM ["Custom (Algerian-specific)"]
-            direction TB
-            DZ_PHONE["📞 DZ_PHONE<br/>━━━━━━━━━━━━━━━━━━━━━━━━━━━<br/>Pattern:  \b(05|06|07)\d{8}\b<br/>Detects:  10-digit mobile numbers<br/>Example:  0551 234 567 → DZ_PHONE<br/>Score:    0.85"]
-            DZ_NIN["🆔 DZ_NIN<br/>━━━━━━━━━━━━━━━━━━━━━━━━━━━<br/>Pattern:  \b\d{6}\s?\d{6}\s?\d{6}\b<br/>Detects:  18-digit National ID Number<br/>Example:  123456 123456 123456 → DZ_NIN<br/>Score:    0.90"]
-            DZ_PASSPORT["📘 DZ_PASSPORT<br/>━━━━━━━━━━━━━━━━━━━━━━━━━━━<br/>Pattern:  \b[A-Z]{2}\d{6}\b<br/>Detects:  Passport number (2 letters + 6 digits)<br/>Example:  AB123456 → DZ_PASSPORT<br/>Score:    0.85"]
-            DZ_RIB["🏦 DZ_RIB<br/>━━━━━━━━━━━━━━━━━━━━━━━━━━━<br/>Pattern:  \b\d{20}\b<br/>Detects:  20-digit bank account identifier<br/>Example:  00712345678910001234 → DZ_RIB<br/>Score:    0.70"]
-            DZ_RC["🏢 DZ_RC<br/>━━━━━━━━━━━━━━━━━━━━━━━━━━━<br/>Pattern:  \b[A-Z]{1,2}\d{7,10}\b<br/>Detects:  Commercial Register number<br/>Example:  B1234567890 → DZ_RC<br/>Score:    0.75"]
-            DZ_NIF["🧾 DZ_NIF<br/>━━━━━━━━━━━━━━━━━━━━━━━━━━━<br/>Pattern:  \b\d{15}\b<br/>Detects:  15-digit Tax ID number<br/>Example:  123456789012345 → DZ_NIF<br/>Score:    0.70"]
-            DZ_WILAYA["🗺️ DZ_WILAYA<br/>━━━━━━━━━━━━━━━━━━━━━━━━━━━<br/>Pattern:  \b(0[1-9]|1[0-9]|...|5[0-8])\b<br/>Detects:  Wilaya department codes (01–58)<br/>Example:  16 (Alger) → DZ_WILAYA<br/>Score:    0.30 (prone to false positives)"]
-            DZ_POSTAL["📫 DZ_POSTAL<br/>━━━━━━━━━━━━━━━━━━━━━━━━━━━<br/>Pattern:  \b(0[1-9]|1[0-9]|...|5[0-8])\d{3}\b<br/>Detects:  5-digit Algerian postal codes<br/>Example:  16000 (Alger) → DZ_POSTAL<br/>Score:    0.60"]
+        subgraph LANGUAGE_REGISTRATION ["Registered for en, fr, ar"]
+            CUSTOM["Custom PatternRecognizers (x3 languages)"]
         end
 
-        PRESIDIO_ANALYZER --> BUILTIN
-        PRESIDIO_ANALYZER --> CUSTOM
+        subgraph CUSTOM ["Custom (Algerian-specific) — all score 0.95"]
+            direction TB
+            DZ_PHONE["📞 DZ_PHONE<br/>\b(05|06|07)\d{8}\b"]
+            DZ_NIN["🆔 DZ_NIN<br/>\b\d{6}\s?\d{6}\s?\d{6}\b"]
+            DZ_PASSPORT["📘 DZ_PASSPORT<br/>\b[A-Z]{2}\d{6}\b"]
+            DZ_RIB["🏦 DZ_RIB<br/>\b\d{20}\b"]
+            DZ_RC["🏢 DZ_RC<br/>\b[A-Z]{1,2}\d{7,10}\b"]
+            DZ_NIF["🧾 DZ_NIF<br/>\b\d{15}\b"]
+            DZ_WILAYA["🗺️ DZ_WILAYA<br/>codes 01–58 (score 0.3)"]
+            DZ_POSTAL["📫 DZ_POSTAL<br/>\b(01–58)\d{3}\b (score 0.85)"]
+            DZ_SSN["🆔 DZ_SSN<br/>\b[12]\d{12,14}\b"]
+        end
+
+        subgraph DENY_LISTS ["Deny-List Recognizers (EN / FR / AR)"]
+            LOC_DENY["LOCATION<br/>58 wilaya names<br/>(Adrar, Alger, Oran, Tizi Ouzou…)"]
+            PER_DENY["PERSON<br/>120+ common Maghrebi first names<br/>(Mohamed, Ahmed, Ali, Fatima…)"]
+        end
     end
 
     ANALYZER -->|analyzer_results| RISK_CLASSIFIER
 
     %% ── 4. Risk Classifier ──
     subgraph RISK_CLASSIFIER ["4. Risk Classifier (Legal Layer)"]
-        CAT_I["Cat I: Direct Identifiers<br/>PERSON, EMAIL, PHONE, NIN, PASSPORT,<br/>RIB, RC, NIF, CREDIT_CARD"]
-        CAT_II["Cat II: Quasi-Identifiers<br/>LOCATION, DATE_TIME, WILAYA, POSTAL_CODE"]
+        CAT_I["Cat I: Direct Identifiers<br/>PERSON, EMAIL, PHONE, NIN, PASSPORT,<br/>RIB, RC, NIF, SSN, CREDIT_CARD"]
+        CAT_II["Cat II: Quasi-Identifiers<br/>LOCATION, DATE_TIME, WILAYA, POSTAL,<br/>IP, URL, IBAN"]
         CAT_III["Cat III: Sensitive Data<br/>HEALTH, RELIGION, POLITICS<br/><b>→ BLOCK (Art. 18)</b>"]
 
         CAT_I -->|must remove| ANONYMIZER
@@ -106,3 +115,4 @@ flowchart TB
     LEGEND_INGESTION -.->|"📄 File readers"| INGESTION
     LEGEND_CLASSIFIER -.->|"⚖️ Legal baseline (Loi 18-07 / 25-11)"| RISK_CLASSIFIER
     LEGEND_ANONYMIZER -.->|"🔐 Strategies per entity"| ANONYMIZER
+    LEGEND_AR -.->|"⚠️ Arabic: regex/deny only (no spaCy model)"| LANG_ROUTER
