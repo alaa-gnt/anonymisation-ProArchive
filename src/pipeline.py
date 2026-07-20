@@ -1,4 +1,6 @@
 
+from langdetect import detect as detect_lang
+
 from src.analyzer import setup_compliance_analyzer, run_analyzer
 from src.anonymizer import setup_compliance_anonymizer, run_anonymizer
 from ingestion.reader import read_file
@@ -22,7 +24,19 @@ def _ensure_engines():
         _anonymizer = setup_compliance_anonymizer()
 
 
-def anonymize(text_input, language="en"):
+_SUPPORTED_LANGUAGES = {"en", "fr"}
+
+
+def _detect_language(text):
+    """Auto-detect language, falling back to English on failure."""
+    try:
+        lang = detect_lang(text)
+        return lang if lang in _SUPPORTED_LANGUAGES else "en"
+    except Exception:
+        return "en"
+
+
+def anonymize(text_input, language=None):
     """
     Analyse *text_input* for PII entities, then anonymise them in-place.
 
@@ -30,8 +44,9 @@ def anonymize(text_input, language="en"):
     ----------
     text_input : str
         Raw document text to process.
-    language : str, optional
-        ISO 639-1 language code (default ``"en"``).
+    language : str or None, optional
+        ISO 639-1 language code (``"en"``, ``"fr"``).
+        If ``None``, auto-detected from the text.
 
     Returns
     -------
@@ -42,7 +57,10 @@ def anonymize(text_input, language="en"):
     """
     _ensure_engines()
 
-    analyzer_results = run_analyzer(_analyzer, text_input)
+    if language is None:
+        language = _detect_language(text_input)
+
+    analyzer_results = run_analyzer(_analyzer, text_input, language=language)
 
     if not analyzer_results:
         return text_input
@@ -56,7 +74,7 @@ def anonymize(text_input, language="en"):
     return anonymized_result
 
 
-def anonymize_file(path, language="en"):
+def anonymize_file(path, language=None):
     """
     Read a document from disk and return its anonymised text.
 
@@ -66,8 +84,8 @@ def anonymize_file(path, language="en"):
     ----------
     path : str or Path
         Path to the document (TXT, PDF, DOCX, or image).
-    language : str, optional
-        ISO 639-1 language code.
+    language : str or None, optional
+        ISO 639-1 language code. If ``None``, auto-detected.
 
     Returns
     -------
