@@ -24,7 +24,7 @@ def _ensure_engines():
         _anonymizer = setup_compliance_anonymizer()
 
 
-_SUPPORTED_LANGUAGES = {"en", "fr"}
+_SUPPORTED_LANGUAGES = {"en", "fr", "ar"}
 
 
 def _detect_language(text):

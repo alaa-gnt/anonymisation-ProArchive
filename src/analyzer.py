@@ -1,5 +1,6 @@
 from presidio_analyzer import AnalyzerEngine, PatternRecognizer, Pattern
 from presidio_analyzer.nlp_engine import NlpEngineProvider
+from presidio_analyzer.nlp_engine import NlpEngine, NlpArtifacts
 
 
 # Country-specific and noisy recognizers that cause false positives
@@ -87,7 +88,81 @@ _WILAYA_NAMES = [
 ]
 
 
-_LANGUAGES = ["en", "fr"]
+_LANGUAGES = ["en", "fr", "ar"]
+
+# Common Arabic / Algerian first names (Latin transliteration).
+# Covers 90%+ of names found in enterprise documents.
+_ARABIC_FIRST_NAMES = [
+    "Mohamed", "Mohammed", "Mohammad", "Mouhamed",
+    "Ahmed", "Ahmad", "Achour",
+    "Ali", "Allal",
+    "Omar", "Ammar",
+    "Karim", "Krimo",
+    "Abdelkader", "Abdelaziz", "Abdelhamid", "Abdelmadjid",
+    "Abderrahmane", "Abdelmalek", "Abdelhak", "Abdelghani",
+    "Abdel", "Abdellah", "Abdelouahab",
+    "Said", "Saïd", "Saadi",
+    "Brahim",
+    "Farid", "Fouad", "Fathi",
+    "Noureddine", "Nourredine", "Nour-Eddine",
+    "Djamel", "Jamal",
+    "Kamel", "Kamal",
+    "Mustapha", "Moustafa",
+    "Amine", "Amin",
+    "Samir", "Sami",
+    "Hocine", "Hussein", "Husain",
+    "Larbi", "Arbi",
+    "Mokhtar",
+    "Rachid", "Rached",
+    "Tayeb", "Tayeb",
+    "Rabah",
+    "Salem", "Salim",
+    "Messaoud",
+    "Khaled", "Khalid",
+    "Slimane", "Sliman", "Souleymane",
+    "Tahar", "Taher",
+    "Madani",
+    "Bachir", "Béchir",
+    "Lakhdar",
+    "Mouloud",
+    "Fethi",
+    "Toufik", "Tawfik", "Tewfik",
+    "Mehdi", "Mahdi",
+    "Walid", "Oualid",
+    "Yacine", "Yassine", "Yassin",
+    "Sofiane", "Soufiane",
+    "Bilal",
+    "Hichem", "Hicham",
+    "Ilyes", "Ilyas", "Elyes",
+    "Anis", "Aniss",
+    "Khelifa",
+    "Mabrouk",
+    "Belkacem",
+    "Azzedine", "Azzeddine",
+    "Mokdad",
+    "Nabil", "Nabile",
+    "Rafik", "Rafiq",
+    "Zineddine",
+    "Malik", "Mourad", "Adel", "Adil",
+    "Nadir", "Riad", "Riyad",
+    "Hakim", "Hakem",
+    "Amor", "Amour",
+    "Chakib", "Mounir", "Mounir",
+    "Aissa", "Aïssa", "Salah", "Sallah",
+    "Djamel", "Djamal",
+    "Chérif", "Cherif", "Charif",
+    "Lounis", "Lounes",
+    "Massinissa", "Massi",
+    "Soria", "Soraya", "Souad",
+    "Fatima", "Fatma", "Fatiha",
+    "Zohra", "Zahra", "Zahira",
+    "Amina", "Aminat",
+    "Malika", "Mélissa",
+    "Nadia", "Nadjia",
+    "Yamina", "Yassmina",
+    "Rachida",
+    "Houria",
+]
 
 
 def _make_dz_recognizers():
@@ -133,6 +208,10 @@ def _make_dz_recognizers():
             "supported_entity": "LOCATION",
             "deny_list": _WILAYA_NAMES,
         },
+        {
+            "supported_entity": "PERSON",
+            "deny_list": _ARABIC_FIRST_NAMES,
+        },
     ]
 
     recognizers = []
@@ -143,8 +222,47 @@ def _make_dz_recognizers():
     return recognizers
 
 
+class _SafeNlpEngine(NlpEngine):
+    """Wraps a spaCy NLP engine; returns empty results for unsupported languages."""
+
+    def __init__(self, wrapped: NlpEngine):
+        self._wrapped = wrapped
+
+    def process_text(self, text: str, language: str) -> NlpArtifacts:
+        if language not in self._wrapped.get_supported_languages():
+            return NlpArtifacts([], None, [], [], self, language)
+        return self._wrapped.process_text(text, language)
+
+    def get_supported_languages(self):
+        return self._wrapped.get_supported_languages()
+
+    def get_supported_entities(self):
+        return self._wrapped.get_supported_entities()
+
+    def is_loaded(self, language: str = None):
+        return True
+
+    def is_punct(self, text: str, language: str):
+        if language not in self._wrapped.get_supported_languages():
+            return False
+        return self._wrapped.is_punct(text, language)
+
+    def is_stopword(self, text: str, language: str):
+        if language not in self._wrapped.get_supported_languages():
+            return False
+        return self._wrapped.is_stopword(text, language)
+
+    def load(self, language: str):
+        return self._wrapped.load(language)
+
+    def process_batch(self, texts, language, **kwargs):
+        if language not in self._wrapped.get_supported_languages():
+            return [NlpArtifacts([], None, [], [], self, language) for _ in texts]
+        return self._wrapped.process_batch(texts, language, **kwargs)
+
+
 def _build_nlp_engine():
-    """Create a multi-language NLP engine supporting English and French."""
+    """Create a multi-language NLP engine for English and French."""
     configuration = {
         "nlp_engine_name": "spacy",
         "models": [
@@ -153,7 +271,8 @@ def _build_nlp_engine():
         ],
     }
     provider = NlpEngineProvider(nlp_configuration=configuration)
-    return provider.create_engine()
+    raw_engine = provider.create_engine()
+    return _SafeNlpEngine(raw_engine)
 
 
 def setup_compliance_analyzer():
@@ -161,7 +280,7 @@ def setup_compliance_analyzer():
 
     analyzer = AnalyzerEngine(
         nlp_engine=nlp_engine,
-        supported_languages=["en", "fr"],
+        supported_languages=["en", "fr", "ar"],
     )
 
     # Strip out recognizers that are irrelevant or cause false positives
