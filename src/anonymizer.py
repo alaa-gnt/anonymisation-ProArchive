@@ -57,6 +57,77 @@ def _build_operators():
     }
 
 
+def _apply_operator(value, config):
+    """Apply a single operator to *value* and return the transformed string."""
+    if config is None:
+        return value
+
+    op = config.operator_name
+    params = config.params or {}
+
+    if op == "replace":
+        return params.get("new_value", value)
+
+    if op == "hash":
+        import hashlib
+        h = hashlib.new(params.get("hash_type", "sha256"))
+        h.update(value.encode("utf-8"))
+        return h.hexdigest()
+
+    if op == "mask":
+        char = params.get("masking_char", "*")
+        n = params.get("chars_to_mask", 0)
+        if params.get("from_end", True):
+            keep = value[:max(0, len(value) - n)]
+            return keep + char * min(n, len(value))
+        else:
+            keep = value[min(n, len(value)):]
+            return char * min(n, len(value)) + keep
+
+    if op == "redact":
+        return ""
+
+    return value
+
+
+def anonymize_with_pseudonyms(text, analyzer_results, operators):
+    """Replace PII entities with context-dependent operators.
+
+    * PERSON → ``<PERSON_1>``, ``<PERSON_2>`` …  (one index per unique name).
+    * Everything else → uses the operator defined in *operators*.
+
+    Applies replacements **right-to-left** so original text offsets stay valid.
+    """
+    groups = {}
+    for r in analyzer_results:
+        if r.entity_type == "PERSON":
+            val = text[r.start:r.end]
+            first = val.split()[0] if val.split() else val
+            groups.setdefault(first, set()).add(val)
+
+    assignments = {}
+    for idx, vals in enumerate(groups.values(), 1):
+        tag = f"<PERSON_{idx}>"
+        for v in vals:
+            assignments[v] = tag
+
+    sorted_results = sorted(analyzer_results, key=lambda r: -r.start)
+
+    result = text
+    for r in sorted_results:
+        original = text[r.start:r.end]
+
+        if r.entity_type == "PERSON":
+            replacement = assignments[original]
+        else:
+            cfg = operators.get(r.entity_type)
+            replacement = _apply_operator(original, cfg)
+
+        result = result[:r.start] + replacement + result[r.end:]
+
+    return result
+
+
 def run_anonymizer(anonymizer_engine, text_input, analyzer_results):
     operators = _build_operators()
 

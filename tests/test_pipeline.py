@@ -11,7 +11,7 @@ class TestPipeline:
     def test_anonymize_returns_result(self):
         result = anonymize("Contact Mehdi at mehdi@example.com")
         assert hasattr(result, "text")
-        assert "<ALGERIAN_CITIZEN>" in result.text
+        assert "<PERSON_1>" in result.text
 
     def test_anonymize_no_pii_returns_string(self):
         result = anonymize("Nothing sensitive here.")
@@ -24,7 +24,7 @@ class TestPipeline:
 
         result, meta = anonymize_file(str(doc))
         output = result.text if hasattr(result, "text") else result
-        assert "<ALGERIAN_CITIZEN>" in output
+        assert "<PERSON_1>" in output
         assert "******" in output
         assert meta["extension"] == ".txt"
 

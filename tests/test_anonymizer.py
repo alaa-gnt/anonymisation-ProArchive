@@ -4,7 +4,12 @@ Tests for the anonymisation engine (src/anonymizer.py).
 
 import pytest
 from src.analyzer import setup_compliance_analyzer, run_analyzer
-from src.anonymizer import setup_compliance_anonymizer, run_anonymizer
+from src.anonymizer import (
+    setup_compliance_anonymizer,
+    run_anonymizer,
+    _build_operators,
+    anonymize_with_pseudonyms,
+)
 
 
 @pytest.fixture
@@ -18,12 +23,16 @@ def anonymizer():
 
 
 class TestAnonymizer:
-    def test_person_replaced(self, analyzer, anonymizer):
-        text = "Mr. Mehdi Benali is here."
-        results = run_analyzer(analyzer, text)
-        output = run_anonymizer(anonymizer, text, results)
-        assert "<ALGERIAN_CITIZEN>" in output.text
-        assert "Mehdi Benali" not in output.text
+    def test_person_pseudonymized(self, analyzer):
+        text = "Karim a appelé Ahmed et Karim est d'accord."
+        results = run_analyzer(analyzer, text, language="fr")
+        ops = _build_operators()
+        output = anonymize_with_pseudonyms(text, results, ops)
+        assert "<PERSON_1>" in output
+        assert "<PERSON_2>" in output
+        assert output.count("<PERSON_1>") == 2
+        assert "Karim" not in output
+        assert "Ahmed" not in output
 
     def test_email_hashed(self, analyzer, anonymizer):
         text = "Email: test@example.com"

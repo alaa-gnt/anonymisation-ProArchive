@@ -3,25 +3,21 @@ import unicodedata
 from langdetect import detect as detect_lang
 
 from src.analyzer import setup_compliance_analyzer, run_analyzer
-from src.anonymizer import setup_compliance_anonymizer, run_anonymizer
+from src.anonymizer import _build_operators, anonymize_with_pseudonyms
 from ingestion.reader import read_file
 
 
 # ---------------------------------------------------------------------------
-# Singleton references — initialised once on first call to anonymize()
+# Singleton reference — initialized once on first call to anonymize()
 # ---------------------------------------------------------------------------
 _analyzer = None
-_anonymizer = None
 
 
 def _ensure_engines():
-    global _analyzer, _anonymizer
+    global _analyzer
 
     if _analyzer is None:
         _analyzer = setup_compliance_analyzer()
-
-    if _anonymizer is None:
-        _anonymizer = setup_compliance_anonymizer()
 
 
 _SUPPORTED_LANGUAGES = {"en", "fr", "ar"}
@@ -153,8 +149,12 @@ def anonymize(text_input, language=None):
         for r in merged
     ]
 
-    anonymized_result = run_anonymizer(_anonymizer, text_input, restored)
-    return anonymized_result
+    operators = _build_operators()
+    anonymized_text = anonymize_with_pseudonyms(text_input, restored, operators)
+
+    from collections import namedtuple
+    AnonymizerResult = namedtuple("AnonymizerResult", ["text"])
+    return AnonymizerResult(text=anonymized_text)
 
 
 def anonymize_file(path, language=None):
