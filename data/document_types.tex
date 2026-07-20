@@ -1,0 +1,575 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french,english]{babel}
+\usepackage{geometry}
+\geometry{top=25mm, bottom=25mm, left=20mm, right=20mm}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{10pt}
+
+\definecolor{catI}{HTML}{E74C3C}
+\definecolor{catII}{HTML}{F39C12}
+\definecolor{catIII}{HTML}{8E44AD}
+
+\begin{document}
+
+\begin{center}
+    {\LARGE\bfseries Algerian Documents --- Types \& PII Entities} \\[6pt]
+    {\large Reference for the Anonymisation Pipeline} \\[4pt]
+    {\footnotesize Based on Loi 18-07 / 25-11 \hspace{8pt}|\hspace{8pt} ProArchive Solutions}
+\end{center}
+
+\hrule
+\vspace{12pt}
+
+\tableofcontents
+\newpage
+
+\section{Identity Documents}
+
+\begin{longtable}{|p{3.5cm}|p{3.5cm}|p{2.5cm}|p{6cm}|}
+\hline
+\textbf{Document} & \textbf{Arabic} & \textbf{French} & \textbf{Entities} \\
+\hline
+\endhead
+
+National ID Card
+&
+CIN
+&
+Carte d'Identite Nationale (CIN)
+&
+NIN (18 digits), full name, filiation (parents names), DOB, birthplace, address, photo metadata, wilaya
+\\ \hline
+
+Passport
+&
+Passeport
+&
+Passeport
+&
+Passport number (2 letters + 6 digits), full name, DOB, birthplace, nationality, issue/expiry date, MRZ code
+\\ \hline
+
+Drivers License
+&
+Permis
+&
+Permis de Conduire
+&
+License number, full name, DOB, address, blood type, category, issue/expiry
+\\ \hline
+
+Family Record Book
+&
+Livret de Famille
+&
+Livret de Famille
+&
+All family members full names, DOBs, marriage date, spouses names, childrens NINs
+\\ \hline
+
+Birth Certificate
+&
+Acte de Naissance
+&
+Acte de Naissance / Extrait S.12
+&
+Full name, DOB \& time, birthplace, parents full names, parents professions, marginal notes
+\\ \hline
+
+Residence Permit
+&
+Carte de Sejour
+&
+Carte de Sejour
+&
+Permit number, full name, nationality, employer, address, validity period
+\\ \hline
+
+Death Certificate
+&
+Acte de Deces
+&
+Acte de Deces
+&
+Full name, DOB, death date \& place, surviving spouse
+\\ \hline
+
+\end{longtable}
+
+\section{Education Documents}
+
+\begin{longtable}{|p{4cm}|p{3cm}|p{8.5cm}|}
+\hline
+\textbf{Document} & \textbf{Languages} & \textbf{Entities} \\
+\hline
+\endhead
+
+Transcript / Releve de Notes
+&
+FR / AR
+&
+Student full name, DOB, institution, diploma ID, grades, academic year
+\\ \hline
+
+Diploma (BAC, Master, etc.)
+&
+FR / AR
+&
+Full name, DOB, diploma number, institution, date, average
+\\ \hline
+
+School Certificate
+&
+FR / AR
+&
+Full name, DOB, institution, class, academic year
+\\ \hline
+
+Exam Invitation / Convocation
+&
+FR / AR
+&
+Full name, DOB, exam center, candidate number, date
+\\ \hline
+
+\end{longtable}
+
+\section{Medical Documents}
+
+\textbf{\textcolor{catIII}{Sensitive Data Warning:}} These documents may contain Category III data (health, genetic, biological). Under Article 18 of Loi 18-07, they may need to be blocked entirely.
+
+\vspace{6pt}
+
+\begin{longtable}{|p{4cm}|p{2.5cm}|p{9cm}|}
+\hline
+\textbf{Document} & \textbf{Languages} & \textbf{Entities} \\
+\hline
+\endhead
+
+Medical Record / Dossier Medical
+&
+FR / AR
+&
+Full name, DOB, NIN, \textbf{\textcolor{catIII}{diagnosis}}, \textbf{\textcolor{catIII}{test results}}, doctor name, hospital, dates
+\\ \hline
+
+Prescription / Ordonnance
+&
+FR / AR
+&
+Patient name, DOB, doctor name, medications, date
+\\ \hline
+
+Medical Certificate / Certificat Medical
+&
+FR / AR
+&
+Full name, DOB, \textbf{\textcolor{catIII}{condition}}, doctor name, date
+\\ \hline
+
+Analysis Results
+&
+FR
+&
+Full name, DOB, \textbf{\textcolor{catIII}{biological data}}, lab name, date
+\\ \hline
+
+Hospitalization Report
+&
+FR / AR
+&
+Full name, DOB, NIN, \textbf{\textcolor{catIII}{diagnosis}}, doctor name, hospital, admission/discharge dates
+\\ \hline
+
+Radiology Report / Compte Rendu
+&
+FR
+&
+Full name, DOB, \textbf{\textcolor{catIII}{clinical findings}}, doctor name, date
+\\ \hline
+
+\end{longtable}
+
+\section{Financial \& Banking Documents}
+
+\begin{longtable}{|p{4.5cm}|p{2cm}|p{9cm}|}
+\hline
+\textbf{Document} & \textbf{Languages} & \textbf{Entities} \\
+\hline
+\endhead
+
+Bank Statement / Releve Bancaire
+&
+FR
+&
+Full name, account number (RIB --- 20 digits), balance, transactions, IBAN, BIC/SWIFT
+\\ \hline
+
+Loan Agreement / Contrat de Pret
+&
+FR / AR
+&
+Full name, employer, salary, loan amount, duration, interest rate, RIB, guarantor info, address
+\\ \hline
+
+Payslip / Fiche de Paie
+&
+FR
+&
+Full name, employee ID, employer name, net/gross salary, social charges, bank details
+\\ \hline
+
+Invoice / Facture
+&
+FR / AR
+&
+Company name, RC, NIF, NIS, Article, client name, address, amounts, TVA
+\\ \hline
+
+Tax Declaration / Declaration Fiscale
+&
+FR
+&
+Full name, NIF, address, income, employer, tax amount, fiscal year
+\\ \hline
+
+RIB (Bank Identity)
+&
+FR
+&
+Full name, bank name, account number, agency code, IBAN
+\\ \hline
+
+\end{longtable}
+
+\section{Employment Documents}
+
+\begin{longtable}{|p{4.5cm}|p{2.5cm}|p{8.5cm}|}
+\hline
+\textbf{Document} & \textbf{Languages} & \textbf{Entities} \\
+\hline
+\endhead
+
+Employment Contract
+&
+FR / AR
+&
+Full name, DOB, employer, salary, job title, address, start date
+\\ \hline
+
+CV / Resume
+&
+FR / AR / EN
+&
+Full name, DOB, address, phone, email, education history, work history
+\\ \hline
+
+Work Certificate / Attestation de Travail
+&
+FR / AR
+&
+Full name, employer, job title, start date, salary
+\\ \hline
+
+Resignation Letter
+&
+FR / AR
+&
+Full name, employer, date
+\\ \hline
+
+Transfer Decision
+&
+FR / AR
+&
+Full name, old/new department, date
+\\ \hline
+
+\end{longtable}
+
+\section{Legal Documents}
+
+\begin{longtable}{|p{4.5cm}|p{2.5cm}|p{8.5cm}|}
+\hline
+\textbf{Document} & \textbf{Languages} & \textbf{Entities} \\
+\hline
+\endhead
+
+Court Judgment / Jugement
+&
+FR / AR
+&
+All party names, judge name, lawyer names, case number, dates, addresses, amounts
+\\ \hline
+
+Notarized Act / Acte Notarie
+&
+FR / AR
+&
+Full names of all signatories, DOBs, addresses, NINs, property details, amounts
+\\ \hline
+
+Official Report / Proces-Verbal
+&
+FR / AR
+&
+Full names, NINs, addresses, dates, officer name, badge number
+\\ \hline
+
+Contract / Contrat
+&
+FR / AR
+&
+Full names, addresses, NINs, RC, NIF, amounts, dates
+\\ \hline
+
+\end{longtable}
+
+\section{Government \& Administrative Documents}
+
+\begin{longtable}{|p{5cm}|p{2.5cm}|p{8cm}|}
+\hline
+\textbf{Document} & \textbf{Languages} & \textbf{Entities} \\
+\hline
+\endhead
+
+Commercial Register / Registre de Commerce
+&
+FR / AR
+&
+Company name, RC number, NIF, NIS, Article, owner name, address, activity
+\\ \hline
+
+Company Statutes / Statuts
+&
+FR / AR
+&
+Owner names, NINs, addresses, capital amount, company name
+\\ \hline
+
+Building Permit / Permis de Construire
+&
+FR / AR
+&
+Owner name, property address, permit number, architect name, date
+\\ \hline
+
+Vehicle Registration / Carte Grise
+&
+FR / AR
+&
+Owner name, address, NIN, registration number, vehicle details
+\\ \hline
+
+Ministerial Decision
+&
+FR / AR
+&
+Official names, reference numbers, dates
+\\ \hline
+
+\end{longtable}
+
+\section{Real Estate Documents}
+
+\begin{longtable}{|p{4.5cm}|p{2.5cm}|p{8.5cm}|}
+\hline
+\textbf{Document} & \textbf{Languages} & \textbf{Entities} \\
+\hline
+\endhead
+
+Property Title / Titre de Propriete
+&
+FR / AR
+&
+Owner name, NIN, property address, boundaries, area
+\\ \hline
+
+Lease Agreement / Contrat de Location
+&
+FR / AR
+&
+Tenant name, landlord name, property address, rent amount, duration
+\\ \hline
+
+Sales Deed / Acte de Vente
+&
+FR / AR
+&
+Buyer/Seller names, NINs, property details, amounts, notary name
+\\ \hline
+
+\end{longtable}
+
+\newpage
+
+\section{Algerian-Specific Entity Reference}
+
+\begin{longtable}{|p{5cm}|p{3.5cm}|p{3.5cm}|p{3.5cm}|}
+\hline
+\textbf{Entity} & \textbf{Format} & \textbf{Example} & \textbf{Documents} \\
+\hline
+\endhead
+
+NIN (National ID Number)
+&
+18 digits (6-6-6)
+&
+\texttt{123456 123456 123456}
+&
+Identity, Legal, Employment
+\\ \hline
+
+Passport Number
+&
+2 letters + 6 digits
+&
+\texttt{AB123456}
+&
+Passport
+\\ \hline
+
+RIB (Bank Identity)
+&
+20 digits
+&
+\texttt{007 12345 6789100A BCD50}
+&
+Banking, Payroll
+\\ \hline
+
+RC (Commercial Register)
+&
+2 letters + 9+ digits
+&
+\texttt{B1234567890}
+&
+Invoices, Company docs
+\\ \hline
+
+NIF (Tax ID)
+&
+15 digits
+&
+\texttt{123456789012345}
+&
+Invoices, Tax, Company
+\\ \hline
+
+NIS (Statistical ID)
+&
+8 digits
+&
+\texttt{12345678}
+&
+Invoices, Company
+\\ \hline
+
+Article (TVA code)
+&
+Alphanumeric
+&
+\texttt{123456A}
+&
+Invoices
+\\ \hline
+
+Wilaya Code
+&
+2-digit (01--58)
+&
+\texttt{16} (Alger)
+&
+Addresses, all
+\\ \hline
+
+Algerian Phone
+&
+10 digits, starts 05/06/07
+&
+\texttt{0551234567}
+&
+All
+\\ \hline
+
+Algerian ZIP Code
+&
+5 digits
+&
+\texttt{16000}
+&
+Addresses
+\\ \hline
+
+Employee ID
+&
+Varies by company
+&
+\texttt{EMP-12345}
+&
+Employment, Payroll
+\\ \hline
+
+\end{longtable}
+
+\section{Risk Category Mapping}
+
+Based on Loi 18-07 (amended by Loi 25-11):
+
+\begin{longtable}{|p{3cm}|p{7cm}|p{5.5cm}|}
+\hline
+\textbf{Category} & \textbf{Entities} & \textbf{Action} \\
+\hline
+\endhead
+
+\textcolor{catI}{\textbf{I --- Direct Identifiers}}
+&
+PERSON, NIN, EMAIL, PHONE, PASSPORT, RIB, RC, NIF, Signature
+&
+Mandatory removal before LLM
+\\ \hline
+
+\textcolor{catII}{\textbf{II --- Quasi-Identifiers}}
+&
+DOB, AGE, PROFESSION, SALARY, ADDRESS (partial), ZIP, COMPANY
+&
+k-anonymize (cohort $\geq$ 5)
+\\ \hline
+
+\textcolor{catIII}{\textbf{III --- Sensitive}}
+&
+HEALTH, DIAGNOSIS, GENETIC, RELIGION, POLITICS
+&
+Absolute block --- reject document
+\\ \hline
+
+\end{longtable}
+
+\section{Implementation Priority}
+
+Based on document frequency in Algerian enterprise archiving:
+
+\begin{enumerate}
+    \item \textbf{Identity Docs} (CIN, Passport, Birth Certificate) --- highest frequency
+    \item \textbf{Contracts \& Invoices} --- core business documents
+    \item \textbf{Payslips} --- common HR archive items
+    \item \textbf{Medical Reports} --- highest risk (Category III)
+    \item \textbf{Bank Statements} --- financial privacy
+    \item \textbf{Diplomas \& CVs} --- recruitment archives
+    \item \textbf{Court Judgments} --- legal archives
+    \item \textbf{Property Titles} --- real estate archives
+\end{enumerate}
+
+\vspace{20pt}
+\hrule
+\vspace{4pt}
+{\footnotesize \textcolor{gray}{ProArchive Solutions --- Internship --- Anonymisation Pipeline Reference}}
+\end{document}

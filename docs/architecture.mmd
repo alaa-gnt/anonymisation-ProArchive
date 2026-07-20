@@ -1,0 +1,108 @@
+---
+title: Anonymisation-ProArchive Architecture
+---
+
+flowchart TB
+    %% ── Input ──
+    INPUT(["Document<br/>(PDF / TXT / DOCX / Image)"])
+    INPUT --> INGESTION
+
+    %% ── 1. Ingestion Layer ──
+    subgraph INGESTION ["1. Document Ingestion"]
+        direction TB
+        READ[read_file<br/>detect extension]
+        TXT_LOADER["txt_loader (.txt, .md, .csv)"]
+        PDF_LOADER["pdf_loader (.pdf)"]
+        DOCX_LOADER["docx_loader (.docx)"]
+        IMG_LOADER["image_loader (.png, .jpg)"]
+        READ --> TXT_LOADER
+        READ --> PDF_LOADER
+        READ --> DOCX_LOADER
+        READ --> IMG_LOADER
+    end
+
+    INGESTION --> LANG_ROUTER
+
+    %% ── 2. Language Router ──
+    subgraph LANG_ROUTER ["2. Language Detection & Routing"]
+        LANG_DETECT["Language Detector<br/>(langdetect / fastText)"]
+        LANG_DETECT -->|en| EN_PIPELINE
+        LANG_DETECT -->|fr| FR_PIPELINE
+        LANG_DETECT -->|ar| AR_PIPELINE
+    end
+
+    EN_PIPELINE --> ANALYZER
+    FR_PIPELINE --> ANALYZER
+    AR_PIPELINE --> ANALYZER
+
+    %% ── 3. Analyzer (Detection) ──
+    subgraph ANALYZER ["3. PII Detection Engine"]
+        PRESIDIO_ANALYZER["Presidio AnalyzerEngine"]
+
+        subgraph BUILTIN ["Auto-detected (no code needed)"]
+            direction TB
+            NER_ENTITIES["🧠 spaCy NER<br/>━━━━━━━━━━━━━━━━━━━━━━━━<br/>PERSON    → full names of individuals<br/>LOCATION  → cities, countries, addresses<br/>DATE_TIME → dates, timestamps, years, ages<br/>NRP       → nationalities, religious groups"]
+            REGEX_ENTITIES["🔍 Built-in Regex<br/>━━━━━━━━━━━━━━━━━━━━━━━━<br/>EMAIL_ADDRESS → email@domain.com<br/>PHONE_NUMBER  → general phone (+213...)<br/>CREDIT_CARD   → Luhn algorithm (universal)<br/>IP_ADDRESS    → IPv4 / IPv6<br/>URL           → web addresses<br/>IBAN_CODE     → international bank format"]
+        end
+
+        subgraph CUSTOM ["Custom (Algerian-specific)"]
+            direction TB
+            DZ_PHONE["📞 DZ_PHONE<br/>━━━━━━━━━━━━━━━━━━━━━━━━━━━<br/>Pattern:  \b(05|06|07)\d{8}\b<br/>Detects:  10-digit mobile numbers<br/>Example:  0551 234 567 → DZ_PHONE<br/>Score:    0.85"]
+            DZ_NIN["🆔 DZ_NIN<br/>━━━━━━━━━━━━━━━━━━━━━━━━━━━<br/>Pattern:  \b\d{6}\s?\d{6}\s?\d{6}\b<br/>Detects:  18-digit National ID Number<br/>Example:  123456 123456 123456 → DZ_NIN<br/>Score:    0.90"]
+            DZ_PASSPORT["📘 DZ_PASSPORT<br/>━━━━━━━━━━━━━━━━━━━━━━━━━━━<br/>Pattern:  \b[A-Z]{2}\d{6}\b<br/>Detects:  Passport number (2 letters + 6 digits)<br/>Example:  AB123456 → DZ_PASSPORT<br/>Score:    0.85"]
+            DZ_RIB["🏦 DZ_RIB<br/>━━━━━━━━━━━━━━━━━━━━━━━━━━━<br/>Pattern:  \b\d{20}\b<br/>Detects:  20-digit bank account identifier<br/>Example:  00712345678910001234 → DZ_RIB<br/>Score:    0.70"]
+            DZ_RC["🏢 DZ_RC<br/>━━━━━━━━━━━━━━━━━━━━━━━━━━━<br/>Pattern:  \b[A-Z]{1,2}\d{7,10}\b<br/>Detects:  Commercial Register number<br/>Example:  B1234567890 → DZ_RC<br/>Score:    0.75"]
+            DZ_NIF["🧾 DZ_NIF<br/>━━━━━━━━━━━━━━━━━━━━━━━━━━━<br/>Pattern:  \b\d{15}\b<br/>Detects:  15-digit Tax ID number<br/>Example:  123456789012345 → DZ_NIF<br/>Score:    0.70"]
+            DZ_WILAYA["🗺️ DZ_WILAYA<br/>━━━━━━━━━━━━━━━━━━━━━━━━━━━<br/>Pattern:  \b(0[1-9]|1[0-9]|...|5[0-8])\b<br/>Detects:  Wilaya department codes (01–58)<br/>Example:  16 (Alger) → DZ_WILAYA<br/>Score:    0.30 (prone to false positives)"]
+            DZ_POSTAL["📫 DZ_POSTAL<br/>━━━━━━━━━━━━━━━━━━━━━━━━━━━<br/>Pattern:  \b(0[1-9]|1[0-9]|...|5[0-8])\d{3}\b<br/>Detects:  5-digit Algerian postal codes<br/>Example:  16000 (Alger) → DZ_POSTAL<br/>Score:    0.60"]
+        end
+
+        PRESIDIO_ANALYZER --> BUILTIN
+        PRESIDIO_ANALYZER --> CUSTOM
+    end
+
+    ANALYZER -->|analyzer_results| RISK_CLASSIFIER
+
+    %% ── 4. Risk Classifier ──
+    subgraph RISK_CLASSIFIER ["4. Risk Classifier (Legal Layer)"]
+        CAT_I["Cat I: Direct Identifiers<br/>PERSON, EMAIL, PHONE, NIN, PASSPORT,<br/>RIB, RC, NIF, CREDIT_CARD"]
+        CAT_II["Cat II: Quasi-Identifiers<br/>LOCATION, DATE_TIME, WILAYA, POSTAL_CODE"]
+        CAT_III["Cat III: Sensitive Data<br/>HEALTH, RELIGION, POLITICS<br/><b>→ BLOCK (Art. 18)</b>"]
+
+        CAT_I -->|must remove| ANONYMIZER
+        CAT_II -->|k-anonymize| ANONYMIZER
+        CAT_III --> BLOCK["❌ Document Rejected"]
+    end
+
+    ANONYMIZER -->|operators + text| OUTPUT
+
+    %% ── 5. Anonymizer ──
+    subgraph ANONYMIZER ["5. Anonymization Engine"]
+        PRESIDIO_ANONYM["Presidio AnonymizerEngine"]
+        REPLACE["replace → &lt;ALGERIAN_CITIZEN&gt;<br/>&lt;ID_REDACTED&gt;, &lt;RC_REDACTED&gt;"]
+        HASH["hash → SHA-256<br/>for EMAIL_ADDRESS"]
+        MASK["mask → ******4567<br/>for PHONE, RIB, POSTAL"]
+        REDACT["redact → remove entirely"]
+
+        PRESIDIO_ANONYM --> REPLACE
+        PRESIDIO_ANONYM --> HASH
+        PRESIDIO_ANONYM --> MASK
+        PRESIDIO_ANONYM --> REDACT
+    end
+
+    %% ── 6. Post-Processing & Output ──
+    subgraph OUTPUT ["6. Post-Processing & Output"]
+        direction TB
+        TEXT_OUT["Sanitized Text"]
+        META_OUT["Metadata JSON"]
+        AUDIT["Audit Log (Art. 38)"]
+    end
+
+    TEXT_OUT -->|"→ Cloud LLM"| LLM["GPT-4 / Claude / Gemini"]
+    META_OUT --> LOCAL["Local Storage"]
+    AUDIT --> LOCAL
+
+    %% ── Legend ──
+    LEGEND_INGESTION -.->|"📄 File readers"| INGESTION
+    LEGEND_CLASSIFIER -.->|"⚖️ Legal baseline (Loi 18-07 / 25-11)"| RISK_CLASSIFIER
+    LEGEND_ANONYMIZER -.->|"🔐 Strategies per entity"| ANONYMIZER
