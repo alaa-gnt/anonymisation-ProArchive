@@ -69,15 +69,18 @@ flowchart TB
         IMG --- MODELS
     end
 
-    %% ── 2. NLP Pipelines (Multi-pass: FR then AR) ──
+    %% ── 2. NLP Pipelines (Multi-pass: EN + FR + AR) ──
     subgraph NLP ["2. NLP Pipelines (Multi-pass)"]
-        FR_PIPELINE["① FR Pass<br/>spaCy fr_core_news_md<br/>→ NER (PER, ORG, LOC, DATE)"]
-        AR_PIPELINE["② AR Pass<br/>_SafeNlpEngine (empty)<br/>→ No NER — regex + deny-lists only"]
+        EN_PIPELINE["① EN Pass<br/>Stanza (en)<br/>→ NER (PERSON, ORG, LOC, DATE)"]
+        FR_PIPELINE["② FR Pass<br/>Stanza (fr)<br/>→ NER (PER, ORG, LOC, DATE)"]
+        AR_PIPELINE["③ AR Pass<br/>Stanza (ar)<br/>→ NER (PER, ORG, LOC, MISC)"]
     end
 
+    INGESTION --> EN_PIPELINE
     INGESTION --> FR_PIPELINE
     INGESTION --> AR_PIPELINE
 
+    EN_PIPELINE --> ANALYZER
     FR_PIPELINE --> ANALYZER
     AR_PIPELINE --> ANALYZER
 
@@ -106,8 +109,8 @@ flowchart TB
             PER_DENY["PERSON<br/>120+ common Maghrebi first names<br/>(Mohamed, Ahmed, Ali, Fatima…)"]
         end
 
-        subgraph GLINER ["🆕 GLiNER Recognizer — NOT YET IMPLEMENTED"]
-            GLINER_ENGINE["GLiNERRecognizer (built-in Presidio)<br/>Zero-shot NER — no training needed<br/>Model: urchade/gliner_multi_pii-v1<br/>Targets: DZ_NIN, DZ_PASSPORT, DZ_RIB,<br/>PERSON, EMAIL, PHONE, ORG, LOC<br/>Supports AR / FR / EN in one pass"]
+        subgraph GLINER ["🆕 GLiNER Recognizer (src/recognizers/dz_gliner.py)"]
+            GLINER_ENGINE["DZGlinerRecognizer<br/>Zero-shot NER — no training needed<br/>Model: urchade/gliner_multi_pii-v1<br/>Entity mapping: national id number → DZ_NIN<br/>passport number → DZ_PASSPORT<br/>phone number → DZ_PHONE<br/>email address → EMAIL_ADDRESS<br/>iban → IBAN_CODE<br/>bank account number → DZ_RIB"]
         end
     end
 
@@ -164,4 +167,4 @@ flowchart TB
     %% ── Legend ──
     LEGEND_INGESTION -.->|"📄 File readers"| INGESTION
     LEGEND_ANONYMIZER -.->|"🔐 Custom pseudonymization"| ANONYMIZER
-    LEGEND_AR -.->|"⚠️ Arabic: no NER model — regex only"| NLP
+    LEGEND_ENGINE -.->|"🔁 StanzaNlpEngine (en + fr + ar)<br/>Replaced spaCy + _SafeNlpEngine<br/>Shared singleton via get_analyzer()"| NLP
