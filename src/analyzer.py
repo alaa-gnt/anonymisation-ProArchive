@@ -1,5 +1,5 @@
 from presidio_analyzer import AnalyzerEngine, PatternRecognizer, Pattern
-from presidio_analyzer.nlp_engine import NlpEngineProvider
+from presidio_analyzer.nlp_engine import StanzaNlpEngine, NlpEngineProvider
 
 from src.recognizers import (
     DZPhoneRecognizer,
@@ -206,16 +206,12 @@ def _make_dz_recognizers():
 
 def _build_nlp_engine():
     """Create a multi-language NLP engine using Stanza (en, fr, ar)."""
-    configuration = {
-        "nlp_engine_name": "stanza",
-        "models": [
-            {"lang_code": "en", "model_name": "en"},
-            {"lang_code": "fr", "model_name": "fr"},
-            {"lang_code": "ar", "model_name": "ar"},
-        ],
-    }
-    provider = NlpEngineProvider(nlp_configuration=configuration)
-    return provider.create_engine()
+    models = [
+        {"lang_code": "en", "model_name": "en"},
+        {"lang_code": "fr", "model_name": "fr"},
+        {"lang_code": "ar", "model_name": "ar"},
+    ]
+    return StanzaNlpEngine(models=models, download_if_missing=False)
 
 
 def setup_compliance_analyzer():
@@ -239,6 +235,16 @@ def setup_compliance_analyzer():
         analyzer.registry.add_recognizer(recognizer)
 
     return analyzer
+
+
+_shared_analyzer = None
+
+
+def get_analyzer():
+    global _shared_analyzer
+    if _shared_analyzer is None:
+        _shared_analyzer = setup_compliance_analyzer()
+    return _shared_analyzer
 
 
 def run_analyzer(analyzer_engine, text_input, language="en"):

@@ -1,21 +1,13 @@
 
 import unicodedata
 
-from src.analyzer import setup_compliance_analyzer, run_analyzer
+from src.analyzer import get_analyzer, run_analyzer
 from src.anonymizer import _build_operators, anonymize_with_pseudonyms
 from ingestion.reader import read_file
 
 
-_analyzer = None
-
-# creates an AnalyzerEngine instance with the appropriate NLP engine and recognizers for English, French, and Arabic. 
-# It also removes irrelevant recognizers and adds custom Algerian recognizers.
-
 def _ensure_engines():
-    global _analyzer
-
-    if _analyzer is None:
-        _analyzer = setup_compliance_analyzer()
+    return get_analyzer()
 
 
 def _has_arabic(text):
@@ -80,7 +72,7 @@ _DEFAULT_MULTI_LANG = ("en", "fr", "ar")
 
 
 def anonymize(text_input, language=None):
-    _ensure_engines()
+    analyzer = _ensure_engines()
 
     if language is None:
         langs = _DEFAULT_MULTI_LANG
@@ -89,7 +81,7 @@ def anonymize(text_input, language=None):
 
     all_results = []
     for lang in langs:
-        results = run_analyzer(_analyzer, text_input, language=lang)
+        results = run_analyzer(analyzer, text_input, language=lang)
         all_results.append(results)
 
     merged = _merge_results(*all_results, full_text=text_input)

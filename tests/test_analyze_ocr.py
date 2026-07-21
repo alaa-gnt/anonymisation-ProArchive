@@ -1,9 +1,9 @@
-from src.analyzer import setup_compliance_analyzer, run_analyzer
+from src.analyzer import get_analyzer, run_analyzer
 from ingestion import read_file
 
 text, meta = read_file("samples/sample_1.png")
 
-analyzer = setup_compliance_analyzer()
+analyzer = get_analyzer()
 results = run_analyzer(analyzer, text, language="fr")
 
 print(f"Source : {meta['filename']}")
