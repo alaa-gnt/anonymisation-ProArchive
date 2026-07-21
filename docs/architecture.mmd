@@ -134,22 +134,17 @@ flowchart TB
         CAT_III["Cat III: Sensitive Data<br/>HEALTH, RELIGION, POLITICS<br/><b>→ BLOCK (Art. 18)</b>"]
     end
 
-    CAT_I -->|must remove| ANONYMIZER
-    CAT_II -->|k-anonymize| ANONYMIZER
+    CAT_I -->|pseudonymize| ANONYMIZER
+    CAT_II -->|pseudonymize| ANONYMIZER
     CAT_III --> BLOCK["❌ Document Rejected"]
 
     ANONYMIZER -->|anonymized text| OUTPUT
 
-    %% ── 5. Anonymizer (Custom Pseudonymization) ──
+    %% ── 5. Anonymizer (Pure Pseudonymization) ──
     subgraph ANONYMIZER ["5. Pseudonymization Pipeline"]
-        OPS["_build_operators() → OperatorConfig per entity"]
-        PSEUDO["anonymize_with_pseudonyms()"]
-        GROUP["PERSON: first-name grouping<br/>unique first word → &lt;PERSON_N&gt;"]
-        APPLY["_apply_operator(value, config)"]
-
-        OPS --> PSEUDO
-        GROUP --> PSEUDO
-        PSEUDO --> APPLY
+        ASSIGN["_assign_pseudonyms()<br/>group unique values per entity type<br/>→ &lt;PERSON_1&gt;, &lt;DZ_PHONE_1&gt;<br/>→ &lt;LOCATION_1&gt;, &lt;EMAIL_ADDRESS_1&gt;"]
+        APPLY["Right-to-left text replacement<br/>preserving original offsets"]
+        ASSIGN --> APPLY
     end
 
     %% ── 6. Post-Processing & Output ──
@@ -167,4 +162,4 @@ flowchart TB
     %% ── Legend ──
     LEGEND_INGESTION -.->|"📄 File readers"| INGESTION
     LEGEND_ANONYMIZER -.->|"🔐 Custom pseudonymization"| ANONYMIZER
-    LEGEND_ENGINE -.->|"🔁 StanzaNlpEngine (en + fr + ar)<br/>Replaced spaCy + _SafeNlpEngine<br/>Shared singleton via get_analyzer()"| NLP
+    LEGEND_ENGINE -.->|"🔁 StanzaNlpEngine (en + fr + ar)<br/>Shared singleton via get_analyzer()"| NLP

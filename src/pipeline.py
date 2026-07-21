@@ -2,7 +2,7 @@
 import unicodedata
 
 from src.analyzer import get_analyzer, run_analyzer
-from src.anonymizer import _build_operators, anonymize_with_pseudonyms
+from src.anonymizer import anonymize_with_pseudonyms
 from ingestion.reader import read_file
 
 
@@ -95,8 +95,7 @@ def anonymize(text_input, language=None):
         for r in merged
     ]
 
-    operators = _build_operators()
-    anonymized_text = anonymize_with_pseudonyms(text_input, restored, operators)
+    anonymized_text = anonymize_with_pseudonyms(text_input, restored)
 
     from collections import namedtuple
     AnonymizerResult = namedtuple("AnonymizerResult", ["text"])
