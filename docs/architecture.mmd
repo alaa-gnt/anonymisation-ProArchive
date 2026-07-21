@@ -69,24 +69,15 @@ flowchart TB
         IMG --- MODELS
     end
 
-    INGESTION --> LANG_ROUTER
-
-    %% ── 2. Language Detection & NLP Pipelines ──
-    subgraph LANG_ROUTER ["2. Language Detection & NLP Pipelines"]
-        LANG_DETECT["Language Detector<br/>(langdetect)"]
-        LANG_DETECT -->|en| EN_PIPELINE
-        LANG_DETECT -->|fr| FR_PIPELINE
-        LANG_DETECT -->|ar| AR_PIPELINE
-        LANG_DETECT -->|default| MULTI["Run both FR + AR<br/>and merge results"]
-
-        EN_PIPELINE["EN Pipeline<br/>en_core_web_lg (spaCy)"]
-        FR_PIPELINE["FR Pipeline<br/>fr_core_news_md (spaCy)"]
-        AR_PIPELINE["AR Pipeline<br/>_SafeNlpEngine wrapper  ←  No Arabic spaCy model<br/>returns empty NlpArtifacts<br/>→ regex + deny-lists + custom subclasses"]
-        MULTI --> FR_PIPELINE
-        MULTI --> AR_PIPELINE
+    %% ── 2. NLP Pipelines (Multi-pass: FR then AR) ──
+    subgraph NLP ["2. NLP Pipelines (Multi-pass)"]
+        FR_PIPELINE["① FR Pass<br/>spaCy fr_core_news_md<br/>→ NER (PER, ORG, LOC, DATE)"]
+        AR_PIPELINE["② AR Pass<br/>_SafeNlpEngine (empty)<br/>→ No NER — regex + deny-lists only"]
     end
 
-    EN_PIPELINE --> ANALYZER
+    INGESTION --> FR_PIPELINE
+    INGESTION --> AR_PIPELINE
+
     FR_PIPELINE --> ANALYZER
     AR_PIPELINE --> ANALYZER
 
@@ -113,6 +104,10 @@ flowchart TB
         subgraph DENY_LISTS ["Deny-List Recognizers (EN / FR / AR)"]
             LOC_DENY["LOCATION<br/>58 wilaya names<br/>(Adrar, Alger, Oran, Tizi Ouzou…)"]
             PER_DENY["PERSON<br/>120+ common Maghrebi first names<br/>(Mohamed, Ahmed, Ali, Fatima…)"]
+        end
+
+        subgraph GLINER ["🆕 GLiNER Recognizer — NOT YET IMPLEMENTED"]
+            GLINER_ENGINE["GLiNERRecognizer (built-in Presidio)<br/>Zero-shot NER — no training needed<br/>Model: urchade/gliner_multi_pii-v1<br/>Targets: DZ_NIN, DZ_PASSPORT, DZ_RIB,<br/>PERSON, EMAIL, PHONE, ORG, LOC<br/>Supports AR / FR / EN in one pass"]
         end
     end
 
@@ -142,26 +137,16 @@ flowchart TB
 
     ANONYMIZER -->|anonymized text| OUTPUT
 
-    %% ── 5. Anonymizer ──
-    subgraph ANONYMIZER ["5. Anonymization Engine"]
+    %% ── 5. Anonymizer (Custom Pseudonymization) ──
+    subgraph ANONYMIZER ["5. Pseudonymization Pipeline"]
         OPS["_build_operators() → OperatorConfig per entity"]
         PSEUDO["anonymize_with_pseudonyms()"]
+        GROUP["PERSON: first-name grouping<br/>unique first word → &lt;PERSON_N&gt;"]
         APPLY["_apply_operator(value, config)"]
-        PERS_GROUP["PERSON: first-name grouping<br/>unique first word → <PERSON_N>"]
 
         OPS --> PSEUDO
+        GROUP --> PSEUDO
         PSEUDO --> APPLY
-        PERS_GROUP --> PSEUDO
-
-        REPLACE["replace → &lt;ALGERIAN_CITIZEN&gt;<br/>&lt;ID_REDACTED&gt;, &lt;RC_REDACTED&gt;"]
-        HASH["hash → SHA-256<br/>for EMAIL_ADDRESS"]
-        MASK["mask → ******4567<br/>for PHONE, RIB, POSTAL"]
-        REDACT["redact → remove entirely"]
-
-        APPLY --> REPLACE
-        APPLY --> HASH
-        APPLY --> MASK
-        APPLY --> REDACT
     end
 
     %% ── 6. Post-Processing & Output ──
@@ -178,7 +163,5 @@ flowchart TB
 
     %% ── Legend ──
     LEGEND_INGESTION -.->|"📄 File readers"| INGESTION
-    LEGEND_CLASSIFIER -.->|"⚖️ Legal baseline (Loi 18-07 / 25-11)"| RISK_CLASSIFIER
-    LEGEND_ANONYMIZER -.->|"🔐 Strategies per entity"| ANONYMIZER
-    LEGEND_AR -.->|"⚠️ Arabic: regex/deny only (no spaCy model)"| LANG_ROUTER
-    LEGEND_MERGE -.->|"🔄 fr + ar results merged"| MERGE
+    LEGEND_ANONYMIZER -.->|"🔐 Custom pseudonymization"| ANONYMIZER
+    LEGEND_AR -.->|"⚠️ Arabic: no NER model — regex only"| NLP
