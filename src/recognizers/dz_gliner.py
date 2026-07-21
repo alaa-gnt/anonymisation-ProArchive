@@ -14,7 +14,6 @@ class DZGlinerRecognizer(GLiNERRecognizer):
             "bank account number": "DZ_RIB",
         }
         super().__init__(
-            supported_entities=list(entity_mapping.values()),
             supported_language=supported_language or "en",
             entity_mapping=entity_mapping,
             model_name="urchade/gliner_multi_pii-v1",
