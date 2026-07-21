@@ -31,10 +31,8 @@ def _build_operators():
         "DZ_RC": OperatorConfig("replace", {"new_value": "<RC_REDACTED>"}),
         # Tax ID → redact
         "DZ_NIF": OperatorConfig("replace", {"new_value": "<NIF_REDACTED>"}),
-        # Social Security Number → redact
-        "DZ_SSN": OperatorConfig("replace", {"new_value": "<SSN_REDACTED>"}),
-        # Wilaya code → redact
-        "DZ_WILAYA": OperatorConfig("replace", {"new_value": "<WILAYA_REDACTED>"}),
+        # Tax ID (NIS) → redact
+        "DZ_NIS": OperatorConfig("replace", {"new_value": "<NIS_REDACTED>"}),
         # Postal code → mask
         "DZ_POSTAL": OperatorConfig("mask", {
             "masking_char": "*",

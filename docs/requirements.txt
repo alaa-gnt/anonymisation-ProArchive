@@ -1,7 +1,8 @@
 presidio-analyzer
 presidio-anonymizer
-spacy
-langdetect
+stanza
+gliner
+torch
 pymupdf
 python-docx
 pytesseract         # also needs: sudo apt install tesseract-ocr

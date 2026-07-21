@@ -1,34 +1,21 @@
 
 import unicodedata
-from langdetect import detect as detect_lang
 
 from src.analyzer import setup_compliance_analyzer, run_analyzer
 from src.anonymizer import _build_operators, anonymize_with_pseudonyms
 from ingestion.reader import read_file
 
 
-# ---------------------------------------------------------------------------
-# Singleton reference — initialized once on first call to anonymize()
-# ---------------------------------------------------------------------------
 _analyzer = None
 
+# creates an AnalyzerEngine instance with the appropriate NLP engine and recognizers for English, French, and Arabic. 
+# It also removes irrelevant recognizers and adds custom Algerian recognizers.
 
 def _ensure_engines():
     global _analyzer
 
     if _analyzer is None:
         _analyzer = setup_compliance_analyzer()
-
-
-_SUPPORTED_LANGUAGES = {"en", "fr", "ar"}
-
-
-def _detect_language(text):
-    try:
-        lang = detect_lang(text)
-        return lang if lang in _SUPPORTED_LANGUAGES else "en"
-    except Exception:
-        return "en"
 
 
 def _has_arabic(text):
@@ -43,16 +30,6 @@ def _has_latin(text):
 
 
 def _merge_results(*result_lists, full_text=""):
-    """Merge results from multiple language pipelines.
-
-    Rules
-    -----
-    * Overlapping spans → keep the highest score.
-    * Equal score → keep the longer span (more complete entity).
-    * Cross-language NER false positives are discarded:
-      - French/English NER entities on Arabic-script text are dropped.
-      - Arabic "NER" (nonexistent) on Latin text is dropped.
-    """
 
     class _Span:
         def __init__(self, r, source_lang):
@@ -68,7 +45,7 @@ def _merge_results(*result_lists, full_text=""):
             flat.append(_Span(r, idx))
 
     # Filter cross-language NER false positives
-    NER_TYPES = {"PERSON", "LOCATION", "ORGANIZATION", "DATE_TIME", "NRP"}
+    NER_TYPES = {"PERSON", "LOCATION", "ORGANIZATION", "DATE_TIME", "NRP", "PER", "ORG", "LOC"}
     filtered = []
     for s in flat:
         span_text = full_text[s.start:s.end]
@@ -99,33 +76,10 @@ def _merge_results(*result_lists, full_text=""):
     return merged
 
 
-_DEFAULT_MULTI_LANG = ("fr", "ar")
+_DEFAULT_MULTI_LANG = ("en", "fr", "ar")
 
 
 def anonymize(text_input, language=None):
-    """
-    Analyse *text_input* for PII entities, then anonymise them in-place.
-
-    For Algerian documents (which commonly mix Arabic and French), the
-    analyzer is run against both ``"fr"`` and ``"ar"`` and results are
-    merged, keeping the highest-scoring entity when spans overlap.
-
-    Parameters
-    ----------
-    text_input : str
-        Raw document text to process.
-    language : str or None, optional
-        ISO 639-1 language code (``"en"``, ``"fr"``, ``"ar"``).
-        If ``None`` (default), runs against both ``"fr"`` and ``"ar"``
-        and merges results.
-
-    Returns
-    -------
-    str or AnonymizerResult
-        If entities were found and processed, returns an ``AnonymizerResult``
-        with a ``.text`` attribute. If nothing was found, returns the
-        original string unchanged.
-    """
     _ensure_engines()
 
     if language is None:
