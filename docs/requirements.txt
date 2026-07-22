@@ -3,7 +3,3 @@ presidio-anonymizer
 stanza
 gliner
 torch
-pymupdf
-python-docx
-pytesseract         # also needs: sudo apt install tesseract-ocr
-Pillow

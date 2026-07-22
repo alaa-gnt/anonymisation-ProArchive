@@ -205,7 +205,6 @@ def _make_dz_recognizers():
 
 
 def _build_nlp_engine():
-    """Create a multi-language NLP engine using Stanza (en, fr, ar)."""
     models = [
         {"lang_code": "en", "model_name": "en"},
         {"lang_code": "fr", "model_name": "fr"},

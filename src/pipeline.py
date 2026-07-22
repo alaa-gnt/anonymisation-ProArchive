@@ -3,7 +3,6 @@ import unicodedata
 
 from src.analyzer import get_analyzer, run_analyzer
 from src.anonymizer import anonymize_with_pseudonyms
-from ingestion.reader import read_file
 
 
 def _ensure_engines():
@@ -72,6 +71,8 @@ _DEFAULT_MULTI_LANG = ("en", "fr", "ar")
 
 
 def anonymize(text_input, language=None):
+    from collections import namedtuple
+    AnonymizerResult = namedtuple("AnonymizerResult", ["text"])
     analyzer = _ensure_engines()
 
     if language is None:
@@ -87,7 +88,7 @@ def anonymize(text_input, language=None):
     merged = _merge_results(*all_results, full_text=text_input)
 
     if not merged:
-        return text_input
+        return AnonymizerResult(text=text_input)
 
     from presidio_analyzer import RecognizerResult
     restored = [
@@ -96,13 +97,4 @@ def anonymize(text_input, language=None):
     ]
 
     anonymized_text = anonymize_with_pseudonyms(text_input, restored)
-
-    from collections import namedtuple
-    AnonymizerResult = namedtuple("AnonymizerResult", ["text"])
     return AnonymizerResult(text=anonymized_text)
-
-
-def anonymize_file(path, language=None):
-    raw_text, metadata = read_file(path)
-    result = anonymize(raw_text, language=language)
-    return result, metadata
