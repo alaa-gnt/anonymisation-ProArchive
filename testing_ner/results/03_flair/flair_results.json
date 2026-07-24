@@ -1,0 +1,75 @@
+[
+  {
+    "document": "my_test.txt",
+    "language": "fr",
+    "time_sec": 0.545,
+    "entities_found": [
+      {
+        "text": "REPUBLIQUE ALGERIENNE DEMOCRATIQUE",
+        "type": "ORG",
+        "start": 0,
+        "end": 34
+      },
+      {
+        "text": "POPULAIREWILAYA",
+        "type": "MISC",
+        "start": 38,
+        "end": 53
+      },
+      {
+        "text": "SETIF",
+        "type": "LOC",
+        "start": 57,
+        "end": 62
+      },
+      {
+        "text": "DAIRA DE AIN OULMENECOMMUNE",
+        "type": "LOC",
+        "start": 65,
+        "end": 92
+      },
+      {
+        "text": "BIR  HADDADACERTIFICAT DE RESIDENCE N",
+        "type": "LOC",
+        "start": 97,
+        "end": 134
+      },
+      {
+        "text": "2024/0417NOM: KADDOUR   PRENOM(S",
+        "type": "LOC",
+        "start": 136,
+        "end": 168
+      },
+      {
+        "text": "ABDELKRIMNE",
+        "type": "LOC",
+        "start": 171,
+        "end": 182
+      },
+      {
+        "text": "E) LE: 03 01 1980  A",
+        "type": "LOC",
+        "start": 183,
+        "end": 203
+      },
+      {
+        "text": "SETIFDEMEURANT A CE JOUR A",
+        "type": "LOC",
+        "start": 208,
+        "end": 234
+      },
+      {
+        "text": "HAMMAM  SOKHNA",
+        "type": "LOC",
+        "start": 237,
+        "end": 251
+      },
+      {
+        "text": "DAIRA  DE  AIN  OULMENE",
+        "type": "LOC",
+        "start": 256,
+        "end": 279
+      }
+    ]
+  }
+]

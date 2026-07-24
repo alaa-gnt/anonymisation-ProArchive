@@ -1,0 +1,68 @@
+[
+  {
+    "document": "my_test.txt",
+    "time_sec": 1.778,
+    "entities_found": [
+      {
+        "text": "DAIR",
+        "type": "LOC",
+        "start": 65,
+        "end": 69
+      },
+      {
+        "text": "DE AI",
+        "type": "ORG",
+        "start": 71,
+        "end": 76
+      },
+      {
+        "text": "O",
+        "type": "LOC",
+        "start": 78,
+        "end": 79
+      },
+      {
+        "text": "K",
+        "type": "LOC",
+        "start": 150,
+        "end": 151
+      },
+      {
+        "text": "AB",
+        "type": "LOC",
+        "start": 171,
+        "end": 173
+      },
+      {
+        "text": "SE",
+        "type": "LOC",
+        "start": 208,
+        "end": 210
+      },
+      {
+        "text": "##TI",
+        "type": "LOC",
+        "start": 210,
+        "end": 212
+      },
+      {
+        "text": "H",
+        "type": "PER",
+        "start": 237,
+        "end": 238
+      },
+      {
+        "text": "DAIR",
+        "type": "LOC",
+        "start": 256,
+        "end": 260
+      },
+      {
+        "text": "DE AI",
+        "type": "ORG",
+        "start": 263,
+        "end": 269
+      }
+    ]
+  }
+]

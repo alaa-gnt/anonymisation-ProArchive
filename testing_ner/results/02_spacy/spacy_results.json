@@ -1,0 +1,69 @@
+[
+  {
+    "document": "my_test.txt",
+    "language": "fr",
+    "time_sec": 0.05,
+    "entities_found": [
+      {
+        "text": "POPULAIREWILAYA DE SETIF",
+        "type": "MISC",
+        "start": 38,
+        "end": 62
+      },
+      {
+        "text": "OULMENECOMMUNE DE",
+        "type": "MISC",
+        "start": 78,
+        "end": 95
+      },
+      {
+        "text": "BIR  HADDADACERTIFICAT DE RESIDENCE N° 2024/0417NOM",
+        "type": "MISC",
+        "start": 97,
+        "end": 148
+      },
+      {
+        "text": "KADDOUR",
+        "type": "LOC",
+        "start": 150,
+        "end": 157
+      },
+      {
+        "text": "ABDELKRIMNE(E",
+        "type": "LOC",
+        "start": 171,
+        "end": 184
+      },
+      {
+        "text": "A",
+        "type": "LOC",
+        "start": 202,
+        "end": 203
+      },
+      {
+        "text": "SETIFDEMEURANT A CE JOUR A",
+        "type": "MISC",
+        "start": 208,
+        "end": 234
+      },
+      {
+        "text": "HAMMAM  SOKHNA  ",
+        "type": "LOC",
+        "start": 237,
+        "end": 253
+      },
+      {
+        "text": "DAIRA  DE  AIN",
+        "type": "MISC",
+        "start": 256,
+        "end": 270
+      },
+      {
+        "text": "OULMENE",
+        "type": "LOC",
+        "start": 272,
+        "end": 279
+      }
+    ]
+  }
+]

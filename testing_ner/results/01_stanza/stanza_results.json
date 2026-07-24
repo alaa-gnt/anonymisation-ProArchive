@@ -1,0 +1,63 @@
+[
+  {
+    "document": "my_test.txt",
+    "language": "ar",
+    "time_sec": 0.567,
+    "entities_found": [
+      {
+        "text": "وهران",
+        "type": "LOC",
+        "start": 6,
+        "end": 11
+      },
+      {
+        "text": "ياسين سعيداني",
+        "type": "PER",
+        "start": 54,
+        "end": 67
+      },
+      {
+        "text": "بالبليدة",
+        "type": "LOC",
+        "start": 76,
+        "end": 84
+      },
+      {
+        "text": "شركة نفطال",
+        "type": "ORG",
+        "start": 89,
+        "end": 99
+      },
+      {
+        "text": "فاروق بوزيد",
+        "type": "PER",
+        "start": 129,
+        "end": 140
+      },
+      {
+        "text": "سوناطراك",
+        "type": "ORG",
+        "start": 162,
+        "end": 170
+      },
+      {
+        "text": "سيدي بلعباس",
+        "type": "LOC",
+        "start": 204,
+        "end": 215
+      },
+      {
+        "text": "عبد القادر بلحاج",
+        "type": "PER",
+        "start": 339,
+        "end": 355
+      },
+      {
+        "text": "بومرداس",
+        "type": "LOC",
+        "start": 395,
+        "end": 402
+      }
+    ]
+  }
+]

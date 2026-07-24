@@ -1,0 +1,44 @@
+[
+  {
+    "document": "my_test.txt",
+    "time_sec": 0.554,
+    "entities_found": [
+      {
+        "text": "محكمة وهران",
+        "type": "organization"
+      },
+      {
+        "text": "الغرفة المدنية",
+        "type": "organization"
+      },
+      {
+        "text": "ياسين سعيداني",
+        "type": "person"
+      },
+      {
+        "text": "شركة نفطال",
+        "type": "company"
+      },
+      {
+        "text": "السيد فاروق بوزيد",
+        "type": "person"
+      },
+      {
+        "text": "شركة سوناطراك",
+        "type": "company"
+      },
+      {
+        "text": "سيدي بلعباس",
+        "type": "location"
+      },
+      {
+        "text": "12 رجب 1443 هـالموافق لـ 14 فبراير 2022 م",
+        "type": "date"
+      },
+      {
+        "text": "الشيخ عبد القادر بلحاج",
+        "type": "person"
+      }
+    ]
+  }
+]

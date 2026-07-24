@@ -1,0 +1,12 @@
+stanza
+spacy
+flair
+gliner
+gliner2
+transformers
+torch
+sentencepiece
+scikit-learn
+pandas
+tabulate
+tqdm

@@ -1,0 +1,62 @@
+[
+  {
+    "document": "my_test.txt",
+    "time_sec": 1.71,
+    "entities_found": [
+      {
+        "text": "REPUBLIQUE ALGERIENNE DEMOCRATIQUE ET POPULAIRE",
+        "type": "LOC",
+        "start": 0,
+        "end": 47
+      },
+      {
+        "text": "WILAYA DE SETIF",
+        "type": "PER",
+        "start": 47,
+        "end": 62
+      },
+      {
+        "text": "DA",
+        "type": "PER",
+        "start": 64,
+        "end": 67
+      },
+      {
+        "text": "IRA DE AIN OULMENECOMMUNE DE BIR HADD",
+        "type": "LOC",
+        "start": 67,
+        "end": 106
+      },
+      {
+        "text": "KADDOUR",
+        "type": "PER",
+        "start": 149,
+        "end": 157
+      },
+      {
+        "text": "ABDELKRIMNE",
+        "type": "PER",
+        "start": 170,
+        "end": 182
+      },
+      {
+        "text": "HAMMAM SOKHNA",
+        "type": "PER",
+        "start": 236,
+        "end": 251
+      },
+      {
+        "text": "DAIRA DE",
+        "type": "PER",
+        "start": 255,
+        "end": 265
+      },
+      {
+        "text": "AIN OULMENE",
+        "type": "LOC",
+        "start": 266,
+        "end": 279
+      }
+    ]
+  }
+]
